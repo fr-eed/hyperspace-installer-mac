@@ -347,9 +347,9 @@ class InstallationManager {
 
     private func execShellAsync(_ command: String) async throws {
         try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async {
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
                 do {
-                    try self.execShell(command)
+                    try self?.execShell(command)
                     continuation.resume()
                 } catch {
                     continuation.resume(throwing: error)

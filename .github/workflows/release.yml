@@ -1,0 +1,32 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
+
+      - name: Download dependencies
+        run: ./download-deps.sh
+
+      - name: Build all platforms
+        run: ./build-scripts/build-all.sh
+
+      - name: Verify releases
+        run: ./build-scripts/ci/verify-releases.sh
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.VERSION }}
+          files: |
+            release/x86_64/*.dmg
+            release/arm64/*.dmg
