@@ -1,0 +1,12 @@
+.vscode
+
+
+# hyperspace
+external
+
+# swift
+
+.build
+
+*.app
+*.dmg
