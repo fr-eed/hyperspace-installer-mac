@@ -12,11 +12,9 @@ jobs:
 
       - name: Run tests arm64
         run: swift test
-        arch: arm64
-        
+
       - name: Run tests x86_64
-        run: swift test
-        arch: x86_64
+        run: arch -x86_64 swift test
 
       - name: Read version
         id: version
