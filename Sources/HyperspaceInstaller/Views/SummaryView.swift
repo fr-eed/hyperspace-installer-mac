@@ -1,43 +1,41 @@
 import SwiftUI
 
-struct SummaryView: View {
-    @ObservedObject var state: InstallationState
+public struct SummaryView: View {
+    @ObservedObject public var state: InstallationState
 
-    var body: some View {
+    public init(state: InstallationState) {
+        self._state = ObservedObject(wrappedValue: state)
+    }
+
+    public var body: some View {
         VStack(spacing: 20) {
-            if state.installationSuccess {
-                successView
-            } else {
-                failureView
-            }
+            successView
 
             Spacer()
 
             HStack(spacing: 12) {
-                if state.installationSuccess {
-                    Button(action: {
-                        if let ftlPath = state.selectedFTL?.path {
-                            let ftlFolder = (ftlPath as NSString).deletingLastPathComponent
-                            NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: ftlFolder)
-                        }
-                    }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "folder")
-                            Text("Open FTL Folder")
-                        }
-                        .frame(maxWidth: .infinity)
+                Button(action: {
+                    if let ftlPath = state.selectedFTL?.path {
+                        let ftlFolder = (ftlPath as NSString).deletingLastPathComponent
+                        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: ftlFolder)
                     }
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "folder")
+                        Text("Open FTL Folder")
+                    }
+                    .frame(maxWidth: .infinity)
+                }
 
-                    Button(action: {
-                        let ftlHyperspaceFolder = NSHomeDirectory() + "/Documents/FTLHyperspace"
-                        NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: ftlHyperspaceFolder)
-                    }) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "folder")
-                            Text("Open Mods Folder")
-                        }
-                        .frame(maxWidth: .infinity)
+                Button(action: {
+                    let ftlHyperspaceFolder = NSHomeDirectory() + "/Documents/FTLHyperspace"
+                    NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: ftlHyperspaceFolder)
+                }) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "folder")
+                        Text("Open Mods Folder")
                     }
+                    .frame(maxWidth: .infinity)
                 }
 
                 Button(action: { NSApplication.shared.terminate(nil) }) {
@@ -45,15 +43,6 @@ struct SummaryView: View {
                         .frame(maxWidth: .infinity)
                 }
                 .keyboardShortcut(.cancelAction)
-
-                if !state.installationSuccess {
-                    Button(action: { state.currentStep = .ftlSelection }) {
-                        Text("Try Again")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .keyboardShortcut(.defaultAction)
-                    .buttonStyle(.borderedProminent)
-                }
             }
         }
         .frame(maxWidth: 500)
@@ -123,62 +112,6 @@ struct SummaryView: View {
                 .cornerRadius(6)
                 .frame(height: 120)
             }
-        }
-    }
-
-    private var failureView: some View {
-        VStack(spacing: 20) {
-            VStack(spacing: 12) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 60))
-                    .foregroundColor(.red)
-
-                Text("Installation Failed")
-                    .font(.system(size: 18, weight: .bold))
-
-                Text(state.installationError ?? "An unknown error occurred")
-                    .font(.system(size: 13))
-                    .foregroundColor(.gray)
-                    .multilineTextAlignment(.center)
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Installation Log")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.gray)
-
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 2) {
-                        ForEach(Array(state.installLog.enumerated()), id: \.offset) { _, line in
-                            Text(line)
-                                .font(.system(size: 10, design: .monospaced))
-                                .foregroundColor(.gray)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                    }
-                    .padding(10)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-                }
-                .background(Color(.controlBackgroundColor))
-                .cornerRadius(6)
-                .frame(height: 200)
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Troubleshooting")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.gray)
-
-                VStack(alignment: .leading, spacing: 6) {
-                    troubleItem("Ensure FTL: Faster Than Light is properly installed")
-                    troubleItem("Check that you have write permissions to the FTL directory")
-                    troubleItem("Verify FTL version is 1.6.12 or 1.6.13")
-                    troubleItem("Check the installation log above for more details")
-                }
-            }
-            .padding(12)
-            .background(Color(.controlBackgroundColor))
-            .cornerRadius(6)
         }
     }
 

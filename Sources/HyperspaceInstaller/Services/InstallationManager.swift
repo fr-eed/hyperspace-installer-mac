@@ -2,7 +2,7 @@ import Foundation
 import AppKit
 
 class InstallationManager {
-    static let shared = InstallationManager()
+    nonisolated(unsafe) static let shared = InstallationManager()
 
     let fileManager = FileManager.default
     let homeDirectory = FileManager.default.homeDirectoryForCurrentUser.path
@@ -13,180 +13,187 @@ class InstallationManager {
         return fileManager.fileExists(atPath: hyperspaceCommandPath)
     }
 
-    @MainActor
     func installHyperspace(
         ftl: FTLInstallation,
         state: InstallationState,
         resourcePath: String
     ) async {
-        state.isInstalling = true
-        state.installLog.removeAll()
-        state.installationError = nil
-        state.installationSuccess = false
+        let ftlDestination = ftl.destination.rawValue
+        let ftlPath = ftl.path
+        let ftlVersion = ftl.version
+        let ftlDylibVersion = ftl.dylibVersion
 
-        state.addLog("=== Hyperspace Installation Started ===")
-        state.addLog("FTL Destination: \(ftl.destination.rawValue)")
-        state.addLog("FTL Location: \(ftl.path)")
-        state.addLog("FTL Version: \(ftl.version)")
-        state.addLog("Using dylib version: \(ftl.dylibVersion)")
-        state.addLog("")
+        await MainActor.run {
+            state.isInstalling = true
+            state.installLog.removeAll()
+            state.installationError = nil
+            state.installationSuccess = false
+
+            state.addLog("=== Hyperspace Installation Started ===")
+            state.addLog("FTL Destination: \(ftlDestination)")
+            state.addLog("FTL Location: \(ftlPath)")
+            state.addLog("FTL Version: \(ftlVersion)")
+            state.addLog("Using dylib version: \(ftlDylibVersion)")
+            state.addLog("")
+        }
 
         do {
-            let totalSteps = 10.0
-
             // Step 1: Create installation directory
-            await updateProgress(state: state, step: 1, total: totalSteps)
+            await updateProgress(state: state, step: 1, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Creating installation directory",
-                action: {
-                    try self.createInstallationDirectory()
-                }
+                action: { try self.createInstallationDirectory() }
             )
 
             // Step 2: Copy files to user's Documents
-            await updateProgress(state: state, step: 2, total: totalSteps)
+            await updateProgress(state: state, step: 2, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Copying Hyperspace files",
-                action: {
-                    try self.copyHyperspaceFiles(resourcePath: resourcePath)
-                }
+                action: { try self.copyHyperspaceFiles(resourcePath: resourcePath) }
             )
 
             // Step 3: Backup original Info.plist
-            await updateProgress(state: state, step: 3, total: totalSteps)
+            await updateProgress(state: state, step: 3, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Backing up FTL configuration",
-                action: {
-                    try self.backupInfoPlist(ftl: ftl)
-                }
+                action: { try self.backupInfoPlist(ftl: ftl) }
             )
 
             // Step 4: Modify Info.plist
-            await updateProgress(state: state, step: 4, total: totalSteps)
+            await updateProgress(state: state, step: 4, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Modifying FTL.app configuration",
-                action: {
-                    try self.modifyInfoPlist(ftl: ftl)
-                }
+                action: { try self.modifyInfoPlist(ftl: ftl) }
             )
 
             // Step 5: Copy dylib
-            await updateProgress(state: state, step: 5, total: totalSteps)
+            await updateProgress(state: state, step: 5, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Copying Hyperspace dylib",
-                action: {
-                    try self.copyDylib(ftl: ftl, resourcePath: resourcePath)
-                }
+                action: { try self.copyDylib(ftl: ftl, resourcePath: resourcePath) }
             )
 
             // Step 6: Copy Hyperspace.command
-            await updateProgress(state: state, step: 6, total: totalSteps)
+            await updateProgress(state: state, step: 6, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Copying launcher script",
-                action: {
-                    try self.copyHyperspaceCommand(ftl: ftl, resourcePath: resourcePath)
-                }
+                action: { try self.copyHyperspaceCommand(ftl: ftl, resourcePath: resourcePath) }
             )
 
             // Step 7: Edit Hyperspace.command
-            await updateProgress(state: state, step: 7, total: totalSteps)
+            await updateProgress(state: state, step: 7, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Updating launcher script",
-                action: {
-                    try self.editHyperspaceCommand(ftl: ftl)
-                }
+                action: { try self.editHyperspaceCommand(ftl: ftl) }
             )
 
             // Step 8: Run ftlman patch
-            await updateProgress(state: state, step: 8, total: totalSteps)
-            state.addLog("• Patching FTL mod data...")
+            await updateProgress(state: state, step: 8, total: INSTALLATION_STEPS_TOTAL)
+            await MainActor.run {
+                state.addLog("• Patching FTL mod data...")
+            }
             try await self.runFTLManPatch(ftl: ftl)
-            state.addLog("  ✓ Done")
+            await MainActor.run {
+                state.addLog("  ✓ Done")
+            }
 
             // Step 9: Create ftlman config
-            await updateProgress(state: state, step: 9, total: totalSteps)
+            await updateProgress(state: state, step: 9, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Creating ftlman configuration",
-                action: {
-                    try self.createFTLManConfig(ftl: ftl)
-                }
+                action: { try self.createFTLManConfig(ftl: ftl) }
             )
 
             // Step 10: Codesign FTL.app
-            await updateProgress(state: state, step: 10, total: totalSteps)
-            state.addLog("• Signing application...")
+            await updateProgress(state: state, step: 10, total: INSTALLATION_STEPS_TOTAL)
+            await MainActor.run {
+                state.addLog("• Signing application...")
+            }
             try self.codesignFTLApp(ftl: ftl)
-            state.addLog("  ✓ Done")
+            await MainActor.run {
+                state.addLog("  ✓ Done")
+            }
 
             await MainActor.run {
                 state.addLog("")
                 state.addLog("=== Installation Complete ===")
             }
-            state.setSuccess()
+            await MainActor.run {
+                state.setSuccess()
+            }
 
         } catch {
-            state.setError("Installation failed: \(error.localizedDescription)")
-            state.addLog("ERROR: \(error.localizedDescription)")
+            await MainActor.run {
+                state.setError("Installation failed: \(error.localizedDescription)")
+                state.addLog("ERROR: \(error.localizedDescription)")
 
-            // Attempt rollback
-            state.addLog("Attempting to rollback changes...")
+                // Attempt rollback
+                state.addLog("Attempting to rollback changes...")
+            }
             try? self.rollbackChanges(ftl: ftl)
         }
     }
 
     private func createInstallationDirectory() throws {
-        let dirPath = "\(homeDirectory)/Documents/FTLHyperspace"
-        let modsPath = "\(dirPath)/mods"
+        let baseDir = InstallationPaths.baseDirectory(homeDirectory: homeDirectory)
+        let modsDir = InstallationPaths.modsDirectory(homeDirectory: homeDirectory)
 
-        try fileManager.createDirectory(atPath: dirPath, withIntermediateDirectories: true)
-        try fileManager.createDirectory(atPath: modsPath, withIntermediateDirectories: true)
+        try fileManager.createDirectory(atPath: baseDir, withIntermediateDirectories: true)
+        try fileManager.createDirectory(atPath: modsDir, withIntermediateDirectories: true)
     }
 
     private func copyHyperspaceFiles(resourcePath: String) throws {
-        let sourceDir = resourcePath
-        let destDir = "\(homeDirectory)/Documents/FTLHyperspace"
+        try copyFTLManIfNeeded(from: resourcePath)
+        try copyModFileIfExists(from: resourcePath)
+    }
 
-        // Copy ftlman
-        let ftlmanSrc = "\(sourceDir)/ftlman"
-        let ftlmanDest = "\(destDir)/ftlman"
+    private func copyFTLManIfNeeded(from resourcePath: String) throws {
+        let ftlmanSrc = "\(resourcePath)/ftlman"
 
-        if fileManager.fileExists(atPath: ftlmanSrc) {
-            // Check if ftlman already exists and has the same hash
-            let shouldCopy: Bool
-            if fileManager.fileExists(atPath: ftlmanDest) {
-                let srcHash = try getFileHash(ftlmanSrc)
-                let destHash = try getFileHash(ftlmanDest)
-                shouldCopy = srcHash != destHash
-            } else {
-                shouldCopy = true
-            }
+        guard fileManager.fileExists(atPath: ftlmanSrc) else { return }
 
-            if shouldCopy {
-                try? fileManager.removeItem(atPath: ftlmanDest)
-                try fileManager.copyItem(atPath: ftlmanSrc, toPath: ftlmanDest)
-                try fileManager.setAttributes([.protectionKey: FileProtectionType.none], ofItemAtPath: ftlmanDest)
-                try execShell("chmod +x '\(ftlmanDest)'")
-                // Remove quarantine attribute so Gatekeeper doesn't block it
-                try? execShell("xattr -d com.apple.quarantine '\(ftlmanDest)'")
-            }
+        let ftlmanDest = InstallationPaths.ftlmanPath(homeDirectory: homeDirectory)
+        let shouldCopy = try shouldUpdateFile(source: ftlmanSrc, destination: ftlmanDest)
+
+        guard shouldCopy else { return }
+
+        try replaceFTLMan(source: ftlmanSrc, destination: ftlmanDest)
+    }
+
+    private func shouldUpdateFile(source: String, destination: String) throws -> Bool {
+        guard fileManager.fileExists(atPath: destination) else {
+            return true  // Copy if destination doesn't exist
         }
 
-        // Copy hyperspace.ftl
-        let modSrc = "\(sourceDir)/mods/hyperspace.ftl"
-        let modDest = "\(destDir)/mods/hyperspace.ftl"
+        let srcHash = try getFileHash(source)
+        let destHash = try getFileHash(destination)
+        return srcHash != destHash
+    }
 
-        if fileManager.fileExists(atPath: modSrc) {
-            try? fileManager.removeItem(atPath: modDest)
-            try fileManager.copyItem(atPath: modSrc, toPath: modDest)
-        }
+    private func replaceFTLMan(source: String, destination: String) throws {
+        try? fileManager.removeItem(atPath: destination)
+        try fileManager.copyItem(atPath: source, toPath: destination)
+        try fileManager.setAttributes([.protectionKey: FileProtectionType.none], ofItemAtPath: destination)
+        try Self.execShell("chmod +x '\(destination)'")
+        try? Self.execShell("xattr -d com.apple.quarantine '\(destination)'")
+    }
+
+    private func copyModFileIfExists(from resourcePath: String) throws {
+        let modSrc = "\(resourcePath)/mods/hyperspace.ftl"
+
+        guard fileManager.fileExists(atPath: modSrc) else { return }
+
+        let modDest = InstallationPaths.modFilePath(homeDirectory: homeDirectory)
+        try? fileManager.removeItem(atPath: modDest)
+        try fileManager.copyItem(atPath: modSrc, toPath: modDest)
     }
 
     private func backupInfoPlist(ftl: FTLInstallation) throws {
@@ -200,7 +207,7 @@ class InstallationManager {
     private func modifyInfoPlist(ftl: FTLInstallation) throws {
         let infoPlistPath = "\(ftl.path)/Contents/Info.plist"
 
-        try execShell(
+        try Self.execShell(
             "plutil -replace CFBundleExecutable -string 'Hyperspace.command' '\(infoPlistPath)'"
         )
     }
@@ -226,7 +233,7 @@ class InstallationManager {
         // Remove existing file if it exists
         try? fileManager.removeItem(atPath: destPath)
         try fileManager.copyItem(atPath: sourcePath, toPath: destPath)
-        try execShell("chmod +x '\(destPath)'")
+        try Self.execShell("chmod +x '\(destPath)'")
     }
 
     private func editHyperspaceCommand(ftl: FTLInstallation) throws {
@@ -247,52 +254,65 @@ class InstallationManager {
     }
 
     private func runFTLManPatch(ftl: FTLInstallation) async throws {
-        let ftlmanPath = "\(homeDirectory)/Documents/FTLHyperspace/ftlman"
-        let modPath = "\(homeDirectory)/Documents/FTLHyperspace/mods/hyperspace.ftl"
-        let dataDir = ftl.ftlDataPath
+        let ftlmanPath = InstallationPaths.ftlmanPath(homeDirectory: homeDirectory)
+        let modPath = InstallationPaths.modFilePath(homeDirectory: homeDirectory)
 
-        // Remove quarantine attribute before running ftlman
-        try? execShell("xattr -d com.apple.quarantine '\(ftlmanPath)'")
+        try? Self.execShell("xattr -d com.apple.quarantine '\(ftlmanPath)'")
 
-        var shouldRetry = true
-        while shouldRetry {
-            do {
-                try await execShellAsync(
-                    "'\(ftlmanPath)' patch '\(modPath)' -d '\(dataDir)'"
-                )
-                shouldRetry = false
-            } catch {
-                // Any error is treated as Gatekeeper blocking ftlman
-                let userAllowed = await showGatekeeperPrompt()
-                if !userAllowed {
-                    throw error
-                }
-                // User clicked OK, loop will retry
+        try await runFTLManPatchWithGatekeeperRetry(
+            ftlmanPath: ftlmanPath,
+            modPath: modPath,
+            dataDir: ftl.ftlDataPath
+        )
+    }
+
+    private func runFTLManPatchWithGatekeeperRetry(
+        ftlmanPath: String,
+        modPath: String,
+        dataDir: String
+    ) async throws {
+        do {
+            try await execShellAsync(
+                "'\(ftlmanPath)' patch '\(modPath)' -d '\(dataDir)'"
+            )
+        } catch {
+            let userAllowed = await showGatekeeperPrompt()
+            guard userAllowed else {
+                throw InstallationError.gatekeeperBlocked
             }
+
+            // Retry recursively after user allows
+            try await runFTLManPatchWithGatekeeperRetry(
+                ftlmanPath: ftlmanPath,
+                modPath: modPath,
+                dataDir: dataDir
+            )
         }
     }
 
-    @MainActor
     private func showGatekeeperPrompt() async -> Bool {
-        let alert = NSAlert()
-        alert.messageText = "ftlman Blocked by Gatekeeper"
-        alert.informativeText = "ftlman needs to be allowed to run.\n\nPlease go to System Preferences > Security & Privacy and click 'Allow' for ftlman, then click OK to continue."
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: "OK")
-        alert.addButton(withTitle: "Cancel")
+        let result = await MainActor.run {
+            let alert = NSAlert()
+            alert.messageText = "ftlman Blocked by Gatekeeper"
+            alert.informativeText = "ftlman needs to be allowed to run.\n\nPlease go to System Preferences > Security & Privacy and click 'Allow' for ftlman, then click OK to continue."
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "OK")
+            alert.addButton(withTitle: "Cancel")
 
-        let response = alert.runModal()
-        return response == .alertFirstButtonReturn
+            let response = alert.runModal()
+            return response == .alertFirstButtonReturn
+        }
+        return result
     }
 
     private func codesignFTLApp(ftl: FTLInstallation) throws {
-        try execShell(
+        try Self.execShell(
             "codesign -f -s - --timestamp=none --all-architectures --deep '\(ftl.path)'"
         )
     }
 
     private func createFTLManConfig(ftl: FTLInstallation) throws {
-        let configPath = "\(homeDirectory)/Documents/FTLHyperspace/settings.json"
+        let configPath = InstallationPaths.configPath(homeDirectory: homeDirectory)
 
         let config: [String: Any] = [
             "mod_directory": "mods",
@@ -326,7 +346,7 @@ class InstallationManager {
 
     // MARK: - Helper Methods
 
-    private func execShell(_ command: String) throws {
+    private static func execShell(_ command: String) throws {
         let task = Process()
         task.launchPath = "/bin/bash"
         task.arguments = ["-c", command]
@@ -347,9 +367,9 @@ class InstallationManager {
 
     private func execShellAsync(_ command: String) async throws {
         try await withCheckedThrowingContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+            DispatchQueue.global(qos: .userInitiated).async {
                 do {
-                    try self?.execShell(command)
+                    try Self.execShell(command)
                     continuation.resume()
                 } catch {
                     continuation.resume(throwing: error)

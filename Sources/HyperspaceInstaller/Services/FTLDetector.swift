@@ -1,33 +1,28 @@
 import Foundation
 
-class FTLDetector {
-    static let shared = FTLDetector()
+public class FTLDetector {
+    nonisolated(unsafe) static let shared = FTLDetector()
 
-    let homeDirectory = FileManager.default.homeDirectoryForCurrentUser.path
+    private let homeDirectory = FileManager.default.homeDirectoryForCurrentUser.path
+    private let fileManager = FileManager.default
 
-    let commonPaths: [(path: String, destination: FTLDestination)] = [
-        ("Library/Application Support/Steam/steamapps/common/FTL Faster Than Light/FTL.app", .steam),
-        ("Games/FTL Faster Than Light/FTL.app", .gog),
-        ("Games/FTL/FTL.app", .humble),
-    ]
-
-    func detectFTLInstallations() -> [FTLInstallation] {
+    public func detectFTLInstallations() -> [FTLInstallation] {
         var installations: [FTLInstallation] = []
 
-        for (relativePath, destination) in commonPaths {
+        for (relativePath, destination) in FTLInstallationLocations.commonPaths {
             let fullPath = "\(homeDirectory)/\(relativePath)"
 
-            if FileManager.default.fileExists(atPath: fullPath) {
-                if let version = readFTLVersion(from: fullPath),
-                   let dylibVersion = validateVersion(version) {
-                    let installation = FTLInstallation(
-                        path: fullPath,
-                        destination: destination,
-                        version: version,
-                        dylibVersion: dylibVersion
-                    )
-                    installations.append(installation)
-                }
+            guard fileManager.fileExists(atPath: fullPath) else { continue }
+
+            if let version = readFTLVersion(from: fullPath),
+               let dylibVersion = validateVersion(version) {
+                let installation = FTLInstallation(
+                    path: fullPath,
+                    destination: destination,
+                    version: version,
+                    dylibVersion: dylibVersion
+                )
+                installations.append(installation)
             }
         }
 
@@ -37,14 +32,18 @@ class FTLDetector {
     func readFTLVersion(from ftlAppPath: String) -> String? {
         let infoPlistPath = "\(ftlAppPath)/Contents/Info.plist"
 
-        guard FileManager.default.fileExists(atPath: infoPlistPath) else {
+        guard fileManager.fileExists(atPath: infoPlistPath) else {
             return nil
         }
 
-        // Try to read version using plutil
+        return readVersionFromPlist(atPath: infoPlistPath)
+    }
+
+    private func readVersionFromPlist(atPath path: String) -> String? {
+        // Try to read version using PlistBuddy
         let process = Process()
         process.executableURL = URL(fileURLWithPath: "/usr/libexec/PlistBuddy")
-        process.arguments = ["-c", "Print :CFBundleShortVersionString", infoPlistPath]
+        process.arguments = ["-c", "Print :CFBundleShortVersionString", path]
 
         let pipe = Pipe()
         process.standardOutput = pipe
@@ -60,7 +59,7 @@ class FTLDetector {
             }
         } catch {
             // Fallback: try to read using NSDictionary
-            if let plist = NSDictionary(contentsOfFile: infoPlistPath) as? [String: Any],
+            if let plist = NSDictionary(contentsOfFile: path) as? [String: Any],
                let version = plist["CFBundleShortVersionString"] as? String {
                 return version
             }
@@ -70,15 +69,6 @@ class FTLDetector {
     }
 
     func validateVersion(_ version: String) -> String? {
-        if version == "1.6.12" || version == "1.6.13" {
-            return version
-        }
-        return nil
-    }
-
-    func selectFTLManually() async -> FTLInstallation? {
-        // This would be called when user clicks "Browse" button
-        // Implementation in FTLSelectionView
-        return nil
+        SupportedFTLVersions.all.contains(version) ? version : nil
     }
 }

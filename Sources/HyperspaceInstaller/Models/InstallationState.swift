@@ -1,39 +1,41 @@
 import Foundation
 
 @MainActor
-class InstallationState: ObservableObject {
-    @Published var currentStep: InstallStep = .welcome
-    @Published var detectedFTLPaths: [FTLInstallation] = []
-    @Published var selectedFTL: FTLInstallation?
-    @Published var isInstalling: Bool = false
-    @Published var installProgress: Double = 0.0
-    @Published var installLog: [String] = []
-    @Published var installationError: String?
-    @Published var installationSuccess: Bool = false
-    @Published var showReinstallConfirmation: Bool = false
-    @Published var hasDetectedFTL: Bool = false
+public class InstallationState: ObservableObject {
+    @Published public var currentStep: InstallStep = .welcome
+    @Published public var detectedFTLPaths: [FTLInstallation] = []
+    @Published public var selectedFTL: FTLInstallation?
+    @Published public var isInstalling: Bool = false
+    @Published public var installProgress: Double = 0.0
+    @Published public var installLog: [String] = []
+    @Published public var installationError: String?
+    @Published public var installationSuccess: Bool = false
+    @Published public var showReinstallConfirmation: Bool = false
+    @Published public var hasDetectedFTL: Bool = false
 
-    func addLog(_ message: String) {
+    public init() {}
+
+    public func addLog(_ message: String) {
         DispatchQueue.main.async {
             self.installLog.append("[\(self.timestamp())] \(message)")
         }
     }
 
-    func setError(_ error: String) {
+    public func setError(_ error: String) {
         DispatchQueue.main.async {
             self.installationError = error
             self.isInstalling = false
         }
     }
 
-    func setSuccess() {
+    public func setSuccess() {
         DispatchQueue.main.async {
             self.installationSuccess = true
             self.isInstalling = false
         }
     }
 
-    func nextStep() {
+    public func nextStep() {
         switch currentStep {
         case .welcome:
             currentStep = .ftlSelection
@@ -46,7 +48,7 @@ class InstallationState: ObservableObject {
         }
     }
 
-    func reset() {
+    public func reset() {
         currentStep = .welcome
         detectedFTLPaths = []
         selectedFTL = nil
@@ -65,7 +67,7 @@ class InstallationState: ObservableObject {
     }
 }
 
-enum InstallStep {
+public enum InstallStep {
     case welcome
     case ftlSelection
     case installing

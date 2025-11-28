@@ -1,9 +1,13 @@
 import SwiftUI
 
-struct WelcomeView: View {
-    @ObservedObject var state: InstallationState
+public struct WelcomeView: View {
+    @ObservedObject public var state: InstallationState
 
-    var body: some View {
+    public init(state: InstallationState) {
+        self.state = state
+    }
+
+    public var body: some View {
         VStack(spacing: 30) {
             VStack(spacing: 10) {
                 Text("Hyperspace Installer")

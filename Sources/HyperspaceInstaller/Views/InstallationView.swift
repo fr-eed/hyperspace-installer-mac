@@ -1,10 +1,14 @@
 import SwiftUI
 
-struct InstallationView: View {
-    @ObservedObject var state: InstallationState
+public struct InstallationView: View {
+    @ObservedObject public var state: InstallationState
     @State private var resourcePath: String = ""
 
-    var body: some View {
+    public init(state: InstallationState) {
+        self._state = ObservedObject(wrappedValue: state)
+    }
+
+    public var body: some View {
         VStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Installing Hyperspace")

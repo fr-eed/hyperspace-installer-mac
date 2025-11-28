@@ -1,10 +1,14 @@
 import SwiftUI
 
-struct FTLSelectionView: View {
-    @ObservedObject var state: InstallationState
+public struct FTLSelectionView: View {
+    @ObservedObject public var state: InstallationState
     @State private var isFilePickerShown = false
 
-    var body: some View {
+    public init(state: InstallationState) {
+        self._state = ObservedObject(wrappedValue: state)
+    }
+
+    public var body: some View {
         VStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Select FTL Installation")

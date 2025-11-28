@@ -1,4 +1,5 @@
 import SwiftUI
+import HyperspaceInstallerLib
 
 @main
 struct HyperspaceInstallerApp: App {

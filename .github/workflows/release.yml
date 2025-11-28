@@ -10,6 +10,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Run tests arm64
+        run: swift test
+        arch: arm64
+        
+      - name: Run tests x86_64
+        run: swift test
+        arch: x86_64
+
       - name: Read version
         id: version
         run: echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
