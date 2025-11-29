@@ -24,6 +24,8 @@ jobs:
         run: echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
 
       - name: Download dependencies
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: ./download-deps.sh
 
       - name: Build all platforms
