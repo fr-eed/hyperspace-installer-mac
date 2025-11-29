@@ -1,23 +1,10 @@
 #!/bin/bash
 
-# GitHub API utilities for downloading releases
-# Low-level functions that accept tag/version as arguments
+# GitHub utilities for downloading releases using gh CLI
+# Uses GitHub CLI (gh) which is pre-installed on GitHub Actions runners
+# Automatically handles authentication via GITHUB_TOKEN
 
 source "$(dirname "${BASH_SOURCE[0]}")/utils.sh"
-
-# Get release info by tag
-# Usage: get_release_info "owner/repo" "tag_or_latest"
-# Returns: JSON response from GitHub API
-get_release_info() {
-    local repo=$1
-    local tag=$2
-
-    if [ "$tag" = "latest" ]; then
-        curl -s "https://api.github.com/repos/$repo/releases/latest"
-    else
-        curl -s "https://api.github.com/repos/$repo/releases/tags/$tag"
-    fi
-}
 
 # Download a release asset by file name pattern
 # Usage: download_release_asset "owner/repo" "tag_or_latest" "filename_pattern" "destination"
@@ -27,28 +14,17 @@ download_release_asset() {
     local filename_pattern=$3
     local destination=$4
 
-    local release_info=$(get_release_info "$repo" "$tag")
-
-    # Check for API errors
-    if echo "$release_info" | grep -q "\"message\""; then
-        local message=$(echo "$release_info" | grep -o '"message":"[^"]*' | cut -d'"' -f4)
-        error "GitHub API error for $repo@$tag: $message"
-    fi
-
-    # Extract download URL for the matching asset
-    # Search for assets where the name contains the pattern
-    local download_url=$(echo "$release_info" | grep -F "$filename_pattern" | grep "browser_download_url" | head -1 | grep -o 'https://[^"]*')
-
-    if [ -z "$download_url" ]; then
-        error "Asset matching '$filename_pattern' not found in $repo@$tag"
-    fi
-
     # Create destination directory if needed
     mkdir -p "$(dirname "$destination")"
 
-    # Download the file
-    if ! curl -sL -o "$destination" "$download_url"; then
-        error "Failed to download from $download_url"
+    # Use gh release download with asset name pattern
+    # gh automatically uses GITHUB_TOKEN for authentication
+    if ! gh release download "$tag" \
+        --repo "$repo" \
+        --pattern "$filename_pattern" \
+        --output "$destination" \
+        --skip-existing; then
+        error "Failed to download asset matching '$filename_pattern' from $repo@$tag"
     fi
 
     success "Downloaded to $destination"

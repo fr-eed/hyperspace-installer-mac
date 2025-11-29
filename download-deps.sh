@@ -39,7 +39,7 @@ echo ""
 
 # Download FTL-Hyperspace (MacOS build)
 step "Downloading FTL-Hyperspace@$HYPERSPACE_VERSION..."
-download_and_extract "fr-eed/FTL-Hyperspace-Dino" "$HYPERSPACE_VERSION" "MacOS.zip" "$EXTERNAL_DIR"
+download_and_extract "fr-eed/FTL-Hyperspace-Dino" "$HYPERSPACE_VERSION" "*-MacOS.zip" "$EXTERNAL_DIR"
 echo ""
 
 # Verify downloads
