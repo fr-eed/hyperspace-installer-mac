@@ -3,7 +3,7 @@ set -e
 
 # Hardcoded versions
 FTLMAN_VERSION="v0.6.6"
-HYPERSPACE_VERSION="v1.20.1-experimental"
+HYPERSPACE_VERSION="v1.20.2"
 
 # Download dependencies from GitHub releases
 # This is a standalone script with hardcoded dependency versions
