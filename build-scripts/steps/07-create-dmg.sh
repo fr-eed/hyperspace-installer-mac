@@ -6,7 +6,7 @@ source "$(dirname "${BASH_SOURCE[0]}")/../utils/utils.sh"
 
 step "Step 7: Creating DMG..."
 
-DMG_NAME="HyperspaceInstaller-$VERSION.dmg"
+DMG_NAME="HyperspaceInstaller-$VERSION-$ARCH.dmg"
 DMG_PATH="$RELEASE_DIR/$DMG_NAME"
 
 # Remove old DMG if it exists
