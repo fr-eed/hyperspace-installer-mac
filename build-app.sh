@@ -12,14 +12,20 @@ SCRIPTS_DIR="$REPO_ROOT/scripts"
 # Download deps
 "$SCRIPTS_DIR/downloads/download-deps.sh"
 
+
+
 # Build executable
 "$SCRIPTS_DIR/build/build-executable.sh" "$ARCH"
+
+# Read hyperspace version from .deps-versions
+source "$REPO_ROOT/.deps-versions"
 
 # Build installer with basemod
 "$SCRIPTS_DIR/build/build-installer.sh" \
   --executable "$REPO_ROOT/release/$ARCH/HyperspaceInstaller" \
   --mod-files "$REPO_ROOT/external/Hyperspace.ftl" \
   --icon-path "$REPO_ROOT/HSInstaller.icns" \
-  --installer-name "Hyperspace Installer" \
+  --installer-name "Hyperspace" \
   --output-dir "$REPO_ROOT/release/$ARCH" \
+  --installer-bundle-version "$HYPERSPACE_VERSION" \
   --arch "$ARCH"

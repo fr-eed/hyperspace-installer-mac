@@ -11,7 +11,7 @@ public struct InstallationView: View {
     public var body: some View {
         VStack(spacing: 20) {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Installing Hyperspace")
+                Text("Installing \(AppInfo.appName)")
                     .font(.system(size: 18, weight: .bold))
 
                 if let ftl = state.selectedFTL {

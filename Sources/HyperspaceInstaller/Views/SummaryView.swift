@@ -51,7 +51,12 @@ public struct SummaryView: View {
     }
 
     private var successView: some View {
-        VStack(spacing: 20) {
+        let homeDirectory = NSHomeDirectory()
+        let baseDir = InstallationPaths.baseDirectory(homeDirectory: homeDirectory)
+        let modsDir = InstallationPaths.modsDirectory(homeDirectory: homeDirectory)
+        let ftlmanPath = InstallationPaths.ftlmanPath(homeDirectory: homeDirectory)
+
+        return VStack(spacing: 20) {
             VStack(spacing: 12) {
                 Image(systemName: "checkmark.circle.fill")
                     .font(.system(size: 60))
@@ -60,7 +65,7 @@ public struct SummaryView: View {
                 Text("Installation Complete")
                     .font(.system(size: 18, weight: .bold))
 
-                Text("Hyperspace has been successfully installed!")
+                Text("\(AppInfo.appName) has been successfully installed!")
                     .font(.system(size: 13))
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.center)
@@ -70,7 +75,7 @@ public struct SummaryView: View {
                 VStack(alignment: .leading, spacing: 8) {
                     infoItem(label: "FTL Version", value: state.selectedFTL?.version ?? "Unknown")
                     infoItem(label: "Installation Path", value: state.selectedFTL?.path ?? "Unknown")
-                    infoItem(label: "Mod Files", value: "~/Documents/FTLHyperspace/")
+                    infoItem(label: "Mod Files", value: baseDir)
                 }
                 .padding(12)
                 .background(Color(.controlBackgroundColor))
@@ -83,36 +88,14 @@ public struct SummaryView: View {
                     .foregroundColor(.gray)
 
                 VStack(alignment: .leading, spacing: 8) {
-                    nextStepItem("Launch FTL normally - Hyperspace will be enabled")
-                    nextStepItem("To add more mods, place .ftl files in ~/Documents/FTLHyperspace/mods/")
-                    nextStepItem("Run: ~/Documents/FTLHyperspace/ftlman to patch additional mods")
+                    nextStepItem("Launch FTL normally - \(AppInfo.appName) will be enabled")
+                    nextStepItem("To add more mods, place .ftl files in \(modsDir)/")
+                    nextStepItem("Run: \(ftlmanPath) to patch additional mods")
                 }
             }
             .padding(12)
             .background(Color(.controlBackgroundColor))
             .cornerRadius(6)
-
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Installation Log")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(.gray)
-
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 2) {
-                        ForEach(Array(state.installLog.enumerated()), id: \.offset) { _, line in
-                            Text(line)
-                                .font(.system(size: 10, design: .monospaced))
-                                .foregroundColor(.gray)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                    }
-                    .padding(10)
-                    .frame(maxWidth: .infinity, alignment: .topLeading)
-                }
-                .background(Color(.controlBackgroundColor))
-                .cornerRadius(6)
-                .frame(height: 120)
-            }
         }
     }
 
@@ -141,15 +124,4 @@ public struct SummaryView: View {
         }
     }
 
-    private func troubleItem(_ text: String) -> some View {
-        HStack(spacing: 8) {
-            Image(systemName: "circle.fill")
-                .foregroundColor(.orange)
-                .font(.system(size: 6))
-
-            Text(text)
-                .font(.system(size: 12))
-                .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
 }

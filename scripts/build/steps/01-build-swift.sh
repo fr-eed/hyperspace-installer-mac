@@ -6,6 +6,21 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../utils/utils.sh"
 
 step "Step 1: Building Swift release binary for $ARCH..."
 
+# Generate Version.swift with the version from VERSION file
+VERSION_FILE="$REPO_ROOT/VERSION"
+if [ ! -f "$VERSION_FILE" ]; then
+    error "VERSION file not found at $VERSION_FILE"
+fi
+VERSION=$(cat "$VERSION_FILE" | tr -d '\n' | xargs)
+
+VERSION_SWIFT="$REPO_ROOT/Sources/HyperspaceInstaller/Helpers/Version.swift"
+cat > "$VERSION_SWIFT" <<EOF
+// Generated at build time - DO NOT EDIT
+public struct InstallerVersion {
+    public static let version = "$VERSION"
+}
+EOF
+
 # Build with architecture flag (minimum macOS 13.0 for SwiftUI compatibility)
 if [ "$ARCH" = "arm64" ]; then
     swift build -c release -Xswiftc -target -Xswiftc arm64-apple-macosx13.0

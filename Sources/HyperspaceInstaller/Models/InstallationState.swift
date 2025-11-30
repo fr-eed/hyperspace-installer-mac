@@ -16,8 +16,13 @@ public class InstallationState: ObservableObject {
     public init() {}
 
     public func addLog(_ message: String) {
-        DispatchQueue.main.async {
-            self.installLog.append("[\(self.timestamp())] \(message)")
+        let logMessage = "[\(self.timestamp())] \(message)"
+        self.installLog.append(logMessage)
+
+        do {
+            try LogManager.shared.appendLog(logMessage)
+        } catch {
+            // Silent fail - don't block installation if log write fails
         }
     }
 

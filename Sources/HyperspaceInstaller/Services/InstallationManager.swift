@@ -29,6 +29,12 @@ class InstallationManager {
             state.installationError = nil
             state.installationSuccess = false
 
+            do {
+                try LogManager.shared.initializeLog()
+            } catch {
+                state.addLog("Warning: Could not initialize log file: \(error)")
+            }
+
             state.addLog("=== Hyperspace Installation Started ===")
             state.addLog("FTL Destination: \(ftlDestination)")
             state.addLog("FTL Location: \(ftlPath)")
@@ -125,8 +131,6 @@ class InstallationManager {
             await MainActor.run {
                 state.addLog("")
                 state.addLog("=== Installation Complete ===")
-            }
-            await MainActor.run {
                 state.setSuccess()
             }
 
@@ -311,10 +315,9 @@ class InstallationManager {
             let modArgs = modPaths.map { "'\($0)'" }.joined(separator: " ")
             let command = "'\(ftlmanPath)' patch \(modArgs) -d '\(dataDir)'"
 
-            // Log the command being executed
-            let modFileNames = modPaths.map { URL(fileURLWithPath: $0).lastPathComponent }.joined(separator: ", ")
+            // Log the exact command being executed
             await MainActor.run {
-                state.addLog("  Command: ftlman patch \(modFileNames) -d <ftl-data>")
+                state.addLog("  Command: \(command)")
             }
 
             try await execShellAsync(command)
@@ -378,7 +381,7 @@ class InstallationManager {
         try jsonData.write(to: URL(fileURLWithPath: configPath))
     }
 
-    private func readModsList(state: InstallationState? = nil) throws -> [String] {
+    public func readModsList(state: InstallationState? = nil) throws -> [String] {
         let resourcePath = Bundle.main.resourcePath ?? ""
         let modsPlistPath = "\(resourcePath)/mods.plist"
 
@@ -480,4 +483,5 @@ class InstallationManager {
 
         return hash
     }
+
 }

@@ -6,8 +6,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../utils/utils.sh"
 
 step "Step 8: Creating DMG..."
 
-DMG_NAME="HyperspaceInstaller-$VERSION-$ARCH.dmg"
-DMG_PATH="$RELEASE_DIR/$DMG_NAME"
+DMG_NAME="$INSTALLER_NAME-$INSTALLER_BUNDLE_VERSION-$BUILD_ARCH.dmg"
+DMG_PATH="$BUILD_OUTPUT_DIR/$DMG_NAME"
 
 # Remove old DMG if it exists
 rm -f "$DMG_PATH"
@@ -18,10 +18,10 @@ rm -rf "$TEMP_DMG_DIR"
 mkdir -p "$TEMP_DMG_DIR"
 
 # Copy app to temp directory
-cp -r "$APP_DIR" "$TEMP_DMG_DIR/"
+cp -r "$INSTALLER_APP_DIR" "$TEMP_DMG_DIR/"
 
 # Create DMG
-hdiutil create -volname "${CUSTOM_INSTALLER_NAME:-Hyperspace Installer}" \
+hdiutil create -volname "$INSTALLER_NAME" \
     -srcfolder "$TEMP_DMG_DIR" \
     -ov -format UDZO \
     "$DMG_PATH"

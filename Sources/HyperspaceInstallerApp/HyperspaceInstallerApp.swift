@@ -41,10 +41,11 @@ struct HyperspaceInstallerApp: App {
 
     private func showAboutWindow() {
         let alert = NSAlert()
-        alert.messageText = "Hyperspace Installer"
+        alert.messageText = AppInfo.appName
 
-        let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "Unknown"
-        alert.informativeText = "FTL: Faster Than Light Mod Installer\n\nVersion \(version)\n\nDeveloped by Freed"
+        let installerVersion = AppInfo.version
+        let bundleVersion = AppInfo.bundleVersion
+        alert.informativeText = "FTL: Faster Than Light Mod Installer\n\nInstaller \(installerVersion)\nBundle \(bundleVersion)\n\nInstaller Developed by Freed"
         alert.alertStyle = .informational
         alert.addButton(withTitle: "OK")
         alert.runModal()

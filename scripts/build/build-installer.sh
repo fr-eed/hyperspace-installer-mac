@@ -13,6 +13,7 @@ set -e
 #     --installer-name "My Installer"
 
 SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
+REPO_ROOT="$(dirname "$(dirname "$SCRIPTS_DIR")")"
 
 # Source utils first so error function is available
 source "$SCRIPTS_DIR/../utils/utils.sh"
@@ -21,9 +22,10 @@ source "$SCRIPTS_DIR/../utils/utils.sh"
 EXECUTABLE=""
 MOD_FILES=""
 ICON_PATH=""
-INSTALLER_NAME="Hyperspace Installer"
+INSTALLER_NAME="Hyperspace"
 OUTPUT_DIR="."
 ARCH_NAME="universal"
+INSTALLER_BUNDLE_VERSION=""
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -33,6 +35,7 @@ while [[ $# -gt 0 ]]; do
         --installer-name) INSTALLER_NAME="$2"; shift 2 ;;
         --output-dir) OUTPUT_DIR="$2"; shift 2 ;;
         --arch) ARCH_NAME="$2"; shift 2 ;;
+        --installer-bundle-version) INSTALLER_BUNDLE_VERSION="$2"; shift 2 ;;
         *) error "Unknown option: $1" ;;
     esac
 done
@@ -45,9 +48,32 @@ done
 # Create output directory if it doesn't exist
 mkdir -p "$OUTPUT_DIR"
 
-# Set paths explicitly before sourcing utils
-export RELEASE_DIR="$OUTPUT_DIR"
-export APP_DIR="$OUTPUT_DIR/HyperspaceInstaller.app"
+# Get installer bundle version from parameter or use date
+[ -z "$INSTALLER_BUNDLE_VERSION" ] && INSTALLER_BUNDLE_VERSION=$(date +%Y.%m.%d)
+
+# ============================================================
+# EXPORTS - All variables passed to step scripts
+# ============================================================
+export REPO_ROOT="$REPO_ROOT"
+export EXTERNAL_DIR="$REPO_ROOT/external"
+export EXECUTABLE_PATH="$EXECUTABLE"
+export EXECUTABLE_NAME="HyperspaceInstaller"
+export BUILD_OUTPUT_DIR="$OUTPUT_DIR"
+export INSTALLER_BUNDLE_VERSION="$INSTALLER_BUNDLE_VERSION"
+export BUILD_ARCH="$ARCH_NAME"
+export INSTALLER_APP_DIR="$OUTPUT_DIR/$INSTALLER_NAME.app"
+export INSTALLER_BUNDLE_NAME="$INSTALLER_NAME"
+export INSTALLER_NAME="$INSTALLER_NAME"
+export INSTALLER_MOD_FILES="$MOD_FILES"
+export INSTALLER_ICON_PATH="$ICON_PATH"
+# ============================================================
+
+# Validate mod files exist
+for modpath in $MOD_FILES; do
+    if [ ! -f "$modpath" ]; then
+        error "Mod file not found: $modpath"
+    fi
+done
 
 # Display header
 info "Building Installer Package"
@@ -59,29 +85,6 @@ echo "  Mod Files: $MOD_FILES"
 [ -n "$ICON_PATH" ] && echo "  Icon: $ICON_PATH"
 echo "  Output: $OUTPUT_DIR"
 echo ""
-
-# Get version from environment or use date
-[ -z "$VERSION" ] && VERSION=$(date +%Y.%m.%d)
-export VERSION
-
-# Export executable source for step scripts
-export EXECUTABLE_SOURCE="$EXECUTABLE"
-
-# Build list of mod filenames from the exact paths provided
-MODS_LIST=()
-while IFS= read -r modpath; do
-    [ -z "$modpath" ] && continue
-    if [ -f "$modpath" ]; then
-        MODS_LIST+=("$(basename "$modpath")")
-    else
-        error "Mod file not found: $modpath"
-    fi
-done <<< "$MOD_FILES"
-
-# Export custom parameters for step scripts
-export MOD_FILES_PATHS="$MOD_FILES"
-export CUSTOM_ICON_PATH="$ICON_PATH"
-export CUSTOM_INSTALLER_NAME="$INSTALLER_NAME"
 
 # Call step scripts
 "$SCRIPTS_DIR/steps/02-create-bundle.sh"
@@ -96,6 +99,6 @@ export CUSTOM_INSTALLER_NAME="$INSTALLER_NAME"
 echo -e "${GREEN}=== Installer Build Complete ===${NC}"
 echo ""
 echo "Output:"
-echo "  App Bundle: $APP_DIR"
-echo "  DMG: $RELEASE_DIR/HyperspaceInstaller-$VERSION-$ARCH_NAME.dmg"
+echo "  App Bundle: $INSTALLER_APP_DIR"
+echo "  DMG: $BUILD_OUTPUT_DIR/$INSTALLER_NAME-$INSTALLER_BUNDLE_VERSION-$BUILD_ARCH.dmg"
 echo ""

@@ -7,6 +7,6 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../utils/utils.sh"
 step "Step 6: Signing the app..."
 
 # Ad-hoc codesign the app
-codesign -f -s - --timestamp=none "$APP_DIR"
+codesign -f -s - --timestamp=none "$INSTALLER_APP_DIR"
 success "Codesigned app"
 echo ""

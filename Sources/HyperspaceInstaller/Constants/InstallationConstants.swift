@@ -55,6 +55,10 @@ enum InstallationPaths {
     static func configPath(homeDirectory: String) -> String {
         "\(baseDirectory(homeDirectory: homeDirectory))/settings.json"
     }
+
+    static func logsDirectory(homeDirectory: String) -> String {
+        "\(baseDirectory(homeDirectory: homeDirectory))/logs"
+    }
 }
 
 // MARK: - Installation Constants

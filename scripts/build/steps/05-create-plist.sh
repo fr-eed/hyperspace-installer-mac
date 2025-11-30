@@ -4,9 +4,16 @@ set -e
 # Step 5: Create Info.plist
 source "$(dirname "${BASH_SOURCE[0]}")/../../utils/utils.sh"
 
-step "Step 5: Creating Info.plist..."
+# Source dependency versions
+DEPS_VERSIONS_FILE="$REPO_ROOT/.deps-versions"
+if [ -f "$DEPS_VERSIONS_FILE" ]; then
+    source "$DEPS_VERSIONS_FILE"
+fi
 
-cat > "$APP_DIR/Contents/Info.plist" <<EOF
+step "Step 5: Creating Info.plist..."
+echo "  Bundle Name: $INSTALLER_NAME"
+
+cat > "$INSTALLER_APP_DIR/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -14,7 +21,7 @@ cat > "$APP_DIR/Contents/Info.plist" <<EOF
     <key>CFBundleDevelopmentRegion</key>
     <string>en</string>
     <key>CFBundleExecutable</key>
-    <string>HyperspaceInstaller</string>
+    <string>$EXECUTABLE_NAME</string>
     <key>CFBundleIconFile</key>
     <string>AppIcon</string>
     <key>CFBundleIconName</key>
@@ -24,19 +31,23 @@ cat > "$APP_DIR/Contents/Info.plist" <<EOF
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>${CUSTOM_INSTALLER_NAME:-Hyperspace Installer}</string>
+    <string>$INSTALLER_NAME</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>
-    <string>$VERSION</string>
+    <string>$INSTALLER_BUNDLE_VERSION</string>
     <key>CFBundleVersion</key>
-    <string>$VERSION</string>
+    <string>$INSTALLER_BUNDLE_VERSION</string>
     <key>LSMinimumSystemVersion</key>
     <string>13.0</string>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSPrincipalClass</key>
     <string>NSApplication</string>
+    <key>FTLManVersion</key>
+    <string>${FTLMAN_VERSION:-unknown}</string>
+    <key>HyperspaceVersion</key>
+    <string>${HYPERSPACE_VERSION:-unknown}</string>
 </dict>
 </plist>
 EOF

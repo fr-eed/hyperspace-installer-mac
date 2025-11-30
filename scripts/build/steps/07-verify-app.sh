@@ -7,13 +7,13 @@ source "$(dirname "${BASH_SOURCE[0]}")/../../utils/utils.sh"
 step "Step 7: Verifying app..."
 
 # Verify the app structure
-require_file "$APP_DIR/Contents/MacOS/$APP_NAME" "Executable"
+[ -f "$INSTALLER_APP_DIR/Contents/MacOS/$EXECUTABLE_NAME" ] || error "Executable missing"
 success "Executable present"
 
-require_file "$APP_DIR/Contents/Resources/ftlman" "ftlman"
+[ -f "$INSTALLER_APP_DIR/Contents/Resources/ftlman" ] || error "ftlman missing"
 success "ftlman present"
 
-require_file "$APP_DIR/Contents/Info.plist" "Info.plist"
+[ -f "$INSTALLER_APP_DIR/Contents/Info.plist" ] || error "Info.plist missing"
 success "Info.plist present"
 
 echo ""

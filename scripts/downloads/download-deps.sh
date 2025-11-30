@@ -1,12 +1,9 @@
 #!/bin/bash
 set -e
 
-# Hardcoded versions
-FTLMAN_VERSION="v0.6.6"
-HYPERSPACE_VERSION="v1.20.2"
-
-# Download dependencies from GitHub releases
-# This is a standalone script with hardcoded dependency versions
+# Source dependency versions from root
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+source "$REPO_ROOT/.deps-versions"
 
 SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)"
 source "$SCRIPTS_DIR/utils/utils.sh"
@@ -28,12 +25,14 @@ mkdir -p "$EXTERNAL_DIR"
 # Download ftlman (Intel x86_64)
 step "Downloading ftlman-x86_64@$FTLMAN_VERSION..."
 download_and_extract "afishhh/ftlman" "$FTLMAN_VERSION" "ftlman-x86_64-apple-darwin.tar.gz" "$EXTERNAL_DIR"
-# Move ftlman from subdirectory to external root if needed
-if [ -f "$EXTERNAL_DIR/ftlman/ftlman" ]; then
-    mv "$EXTERNAL_DIR/ftlman/ftlman" "$EXTERNAL_DIR/ftlman-bin"
+
+# Flatten directory structure if needed
+if [ -d "$EXTERNAL_DIR/ftlman" ] && [ -f "$EXTERNAL_DIR/ftlman/ftlman" ]; then
+    mv "$EXTERNAL_DIR/ftlman/ftlman" "$EXTERNAL_DIR/ftlman.tmp"
     rm -rf "$EXTERNAL_DIR/ftlman"
-    mv "$EXTERNAL_DIR/ftlman-bin" "$EXTERNAL_DIR/ftlman"
+    mv "$EXTERNAL_DIR/ftlman.tmp" "$EXTERNAL_DIR/ftlman"
 fi
+
 chmod +x "$EXTERNAL_DIR/ftlman"
 echo ""
 
