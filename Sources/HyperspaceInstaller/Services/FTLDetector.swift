@@ -9,8 +9,8 @@ public class FTLDetector {
     public func detectFTLInstallations() -> [FTLInstallation] {
         var installations: [FTLInstallation] = []
 
-        for (relativePath, destination) in FTLInstallationLocations.commonPaths {
-            let fullPath = "\(homeDirectory)/\(relativePath)"
+        for (pathString, destination) in FTLInstallationLocations.commonPaths {
+            let fullPath = pathString.replacingOccurrences(of: "$HOME", with: homeDirectory)
 
             guard fileManager.fileExists(atPath: fullPath) else { continue }
 

@@ -36,5 +36,7 @@ public enum FTLDestination: String, Codable, Sendable {
     case steam = "Steam"
     case gog = "GOG"
     case humble = "Humble"
+    case heroic = "Heroic"
+    case epic = "EpicGames"
     case custom = "Custom"
 }

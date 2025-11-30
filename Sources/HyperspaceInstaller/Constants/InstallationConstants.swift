@@ -14,16 +14,27 @@ enum SupportedFTLVersions {
 
 enum FTLInstallationLocations {
     static let commonPaths: [(path: String, destination: FTLDestination)] = [
-        ("Library/Application Support/Steam/steamapps/common/FTL Faster Than Light/FTL.app", .steam),
-        ("Games/FTL Faster Than Light/FTL.app", .gog),
-        ("Games/FTL/FTL.app", .humble),
+ 
+        // Drag & drop installs
+        ("/Applications/FTL Advanced Edition.app", .gog),
+        ("/Applications/FTL.app", .gog),
+        
+        ("$HOME/Applications/FTL Advanced Edition.app", .gog),
+        ("$HOME/Applications/FTL.app", .gog),
+
+        // Launcher based installs
+        ("$HOME/Library/Application Support/Steam/steamapps/common/FTL Faster Than Light/FTL.app", .steam),
+        ("$HOME/Library/Application Support/GOG.com/Galaxy/Applications/FTL.app", .gog),
+        ("/Users/Shared/Epic Games/FasterThanLight/FTL.app", .epic),
+        ("$HOME/Games/Heroic/FasterThanLight/FTL.app", .heroic),
+        ("$HOME/Games/Heroic/FTL Advanced Edition.app", .heroic)
     ]
 }
 
 // MARK: - Installation Paths
 
 enum InstallationPaths {
-    private static let baseDir = "Documents/FTLHyperspace"
+    private static let baseDir = "Games/FTLHyperspace"
 
     static func baseDirectory(homeDirectory: String) -> String {
         "\(homeDirectory)/\(baseDir)"

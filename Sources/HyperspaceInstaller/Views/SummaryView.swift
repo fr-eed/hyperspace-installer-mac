@@ -68,7 +68,7 @@ public struct SummaryView: View {
             VStack(alignment: .leading, spacing: 12) {
                 VStack(alignment: .leading, spacing: 8) {
                     infoItem(label: "FTL Version", value: state.selectedFTL?.version ?? "Unknown")
-                    infoItem(label: "Installation Path", value: state.selectedFTL?.destination.rawValue ?? "Unknown")
+                    infoItem(label: "Installation Path", value: state.selectedFTL?.path ?? "Unknown")
                     infoItem(label: "Mod Files", value: "~/Documents/FTLHyperspace/")
                 }
                 .padding(12)
