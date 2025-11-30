@@ -41,7 +41,9 @@ done
 [ -z "$EXECUTABLE" ] && error "Missing --executable parameter"
 [ -z "$MOD_FILES" ] && error "Missing --mod-files parameter"
 [ ! -f "$EXECUTABLE" ] && error "Executable not found: $EXECUTABLE"
-[ ! -d "$OUTPUT_DIR" ] && error "Output directory not found: $OUTPUT_DIR"
+
+# Create output directory if it doesn't exist
+mkdir -p "$OUTPUT_DIR"
 
 # Set paths explicitly before sourcing utils
 export RELEASE_DIR="$OUTPUT_DIR"
