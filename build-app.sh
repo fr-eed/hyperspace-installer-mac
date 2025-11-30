@@ -7,16 +7,16 @@ set -e
 
 ARCH="${1:-arm64}"
 REPO_ROOT="$(dirname "${BASH_SOURCE[0]}")"
-SCRIPTS_DIR="$REPO_ROOT/scripts/build"
+SCRIPTS_DIR="$REPO_ROOT/scripts"
 
 # Download deps
-"$SCRIPTS_DIR/download-dependencies.sh"
+"$SCRIPTS_DIR/downloads/download-deps.sh"
 
 # Build executable
-"$SCRIPTS_DIR/build-executable.sh" "$ARCH"
+"$SCRIPTS_DIR/build/build-executable.sh" "$ARCH"
 
 # Build installer with basemod
-"$SCRIPTS_DIR/build-installer.sh" \
+"$SCRIPTS_DIR/build/build-installer.sh" \
   --executable "$REPO_ROOT/release/$ARCH/HyperspaceInstaller" \
   --mod-files "$REPO_ROOT/external/Hyperspace.ftl" \
   --icon-path "$REPO_ROOT/HSInstaller.icns" \

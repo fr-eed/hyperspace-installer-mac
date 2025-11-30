@@ -14,6 +14,9 @@ set -e
 
 SCRIPTS_DIR="$(dirname "${BASH_SOURCE[0]}")"
 
+# Source utils first so error function is available
+source "$SCRIPTS_DIR/../utils/utils.sh"
+
 # Parse arguments
 EXECUTABLE=""
 MOD_FILES=""
@@ -43,9 +46,6 @@ done
 # Set paths explicitly before sourcing utils
 export RELEASE_DIR="$OUTPUT_DIR"
 export APP_DIR="$OUTPUT_DIR/HyperspaceInstaller.app"
-
-# Now source utils
-source "$SCRIPTS_DIR/../utils/utils.sh"
 
 # Display header
 info "Building Installer Package"
