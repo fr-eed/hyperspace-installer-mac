@@ -14,7 +14,7 @@ on:
 
 jobs:
   build:
-    uses: fr-eed/hyperspace-mac-autoinstaller/.github/workflows/build-installer.yml@main
+    uses: fr-eed/hyperspace-installer-mac/.github/workflows/build-installer.yml@main
     with:
       installer-bundle-version: ${{ inputs.installer-bundle-version }}
       installer-name: "Hyperspace Installer"

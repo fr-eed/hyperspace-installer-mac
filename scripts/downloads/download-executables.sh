@@ -24,7 +24,7 @@ echo ""
 
 # Download executables from release
 step "Downloading HyperspaceInstaller-$VERSION-executables.tar.gz..."
-download_and_extract "freed-al/hyperspace-mac-autoinstaller" "v$VERSION" "*-executables.tar.gz" "$OUTPUT_DIR"
+download_and_extract "freed-al/hyperspace-installer-mac" "v$VERSION" "*-executables.tar.gz" "$OUTPUT_DIR"
 echo ""
 
 # Verify executables exist

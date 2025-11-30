@@ -30,22 +30,22 @@ jobs:
       - name: Checkout calling repo
         uses: actions/checkout@v4
 
-      - name: Checkout hyperspace-mac-autoinstaller
+      - name: Checkout hyperspace-installer-mac
         uses: actions/checkout@v4
         with:
-          repository: fr-eed/hyperspace-mac-autoinstaller
-          path: hyperspace-mac-autoinstaller
+          repository: fr-eed/hyperspace-installer-mac
+          path: hyperspace-installer-mac
 
       - name: Download executables
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          cd hyperspace-mac-autoinstaller
+          cd hyperspace-installer-mac
           ./scripts/downloads/download-executables.sh
 
       - name: Build installer for ${{ matrix.arch }}
         run: |
-          cd hyperspace-mac-autoinstaller
+          cd hyperspace-installer-mac
           ./scripts/build/build-installer.sh \
             --executable ./release/${{ matrix.arch }}/HyperspaceInstaller \
             --mod-files "${{ inputs.mod-files }}" \

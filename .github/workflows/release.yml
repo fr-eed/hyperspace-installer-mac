@@ -49,7 +49,7 @@ jobs:
 
   build-basemod:
     needs: build-and-release
-    uses: fr-eed/hyperspace-mac-autoinstaller/.github/workflows/release-basemod-installer.yml@main
+    uses: fr-eed/hyperspace-installer-mac/.github/workflows/release-basemod-installer.yml@main
     with:
       installer-bundle-version: ${{ needs.build-and-release.outputs.version }}
       release-tag: v${{ needs.build-and-release.outputs.version }}
