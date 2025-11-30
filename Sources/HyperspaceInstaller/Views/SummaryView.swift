@@ -28,7 +28,8 @@ public struct SummaryView: View {
                 }
 
                 Button(action: {
-                    let ftlHyperspaceFolder = NSHomeDirectory() + "/Documents/FTLHyperspace"
+                    let homeDirectory = NSHomeDirectory()
+                    let ftlHyperspaceFolder = InstallationPaths.baseDirectory(homeDirectory: homeDirectory)
                     NSWorkspace.shared.selectFile(nil, inFileViewerRootedAtPath: ftlHyperspaceFolder)
                 }) {
                     HStack(spacing: 6) {

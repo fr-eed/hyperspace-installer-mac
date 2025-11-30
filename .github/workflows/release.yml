@@ -9,6 +9,8 @@ permissions:
 jobs:
   build-and-release:
     runs-on: macos-latest
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -26,18 +28,28 @@ jobs:
       - name: Download dependencies
         env:
           GH_TOKEN: ${{ github.token }}
-        run: ./download-deps.sh
+        run: ./scripts/downloads/download-deps.sh
 
-      - name: Build all platforms
-        run: ./build-scripts/build-all.sh
+      - name: Build executables
+        run: ./scripts/build/build-executable-all.sh
 
-      - name: Verify releases
-        run: ./build-scripts/ci/verify-releases.sh
+      - name: Package executables
+        env:
+          VERSION: ${{ steps.version.outputs.VERSION }}
+        run: |
+          cd release
+          tar -czf "HyperspaceInstaller-$VERSION-executables.tar.gz" x86_64/HyperspaceInstaller arm64/HyperspaceInstaller
+          ls -lh "HyperspaceInstaller-$VERSION-executables.tar.gz"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.version.outputs.VERSION }}
-          files: |
-            release/x86_64/*.dmg
-            release/arm64/*.dmg
+          files: release/HyperspaceInstaller-${{ steps.version.outputs.VERSION }}-executables.tar.gz
+
+  build-basemod:
+    needs: build-and-release
+    uses: fr-eed/hyperspace-mac-autoinstaller/.github/workflows/release-basemod-installer.yml@main
+    with:
+      installer-bundle-version: ${{ needs.build-and-release.outputs.version }}
+      release-tag: v${{ needs.build-and-release.outputs.version }}

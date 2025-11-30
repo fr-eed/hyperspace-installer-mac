@@ -99,9 +99,9 @@ class InstallationManager {
             await MainActor.run {
                 state.addLog("• Patching FTL mod data...")
             }
-            try await self.runFTLManPatch(ftl: ftl)
+            try await self.runFTLManPatch(ftl: ftl, state: state)
             await MainActor.run {
-                state.addLog("  ✓ Done")
+                state.addLog("  ✓ Patching complete")
             }
 
             // Step 9: Create ftlman config
@@ -152,7 +152,7 @@ class InstallationManager {
 
     private func copyHyperspaceFiles(resourcePath: String) throws {
         try copyFTLManIfNeeded(from: resourcePath)
-        try copyModFileIfExists(from: resourcePath)
+        try copyAllModFiles(from: resourcePath)
     }
 
     private func copyFTLManIfNeeded(from resourcePath: String) throws {
@@ -186,14 +186,23 @@ class InstallationManager {
         try? Self.execShell("xattr -d com.apple.quarantine '\(destination)'")
     }
 
-    private func copyModFileIfExists(from resourcePath: String) throws {
-        let modSrc = "\(resourcePath)/mods/hyperspace.ftl"
+    private func copyAllModFiles(from resourcePath: String) throws {
+        let modsSourceDir = "\(resourcePath)/mods"
+        let modsDestDir = InstallationPaths.modsDirectory(homeDirectory: homeDirectory)
 
-        guard fileManager.fileExists(atPath: modSrc) else { return }
+        guard fileManager.fileExists(atPath: modsSourceDir) else { return }
 
-        let modDest = InstallationPaths.modFilePath(homeDirectory: homeDirectory)
-        try? fileManager.removeItem(atPath: modDest)
-        try fileManager.copyItem(atPath: modSrc, toPath: modDest)
+        // Get all .ftl and .zip files from the bundled mods directory
+        let modFiles = try fileManager.contentsOfDirectory(atPath: modsSourceDir)
+            .filter { $0.hasSuffix(".ftl") || $0.hasSuffix(".zip") }
+
+        for modFile in modFiles {
+            let sourcePath = "\(modsSourceDir)/\(modFile)"
+            let destPath = "\(modsDestDir)/\(modFile)"
+
+            try? fileManager.removeItem(atPath: destPath)
+            try fileManager.copyItem(atPath: sourcePath, toPath: destPath)
+        }
     }
 
     private func backupInfoPlist(ftl: FTLInstallation) throws {
@@ -253,28 +262,62 @@ class InstallationManager {
         try updated.write(toFile: scriptPath, atomically: true, encoding: .utf8)
     }
 
-    private func runFTLManPatch(ftl: FTLInstallation) async throws {
+    private func runFTLManPatch(ftl: FTLInstallation, state: InstallationState) async throws {
         let ftlmanPath = InstallationPaths.ftlmanPath(homeDirectory: homeDirectory)
-        let modPath = InstallationPaths.modFilePath(homeDirectory: homeDirectory)
+        let modsDir = InstallationPaths.modsDirectory(homeDirectory: homeDirectory)
 
         try? Self.execShell("xattr -d com.apple.quarantine '\(ftlmanPath)'")
 
-        try await runFTLManPatchWithGatekeeperRetry(
-            ftlmanPath: ftlmanPath,
-            modPath: modPath,
-            dataDir: ftl.ftlDataPath
-        )
+        // Get list of mods from mods.plist (order is important)
+        let modsList = try readModsList(state: state)
+        let ftlDataPath = ftl.ftlDataPath
+
+        await MainActor.run {
+            state.addLog("  Mods to patch: \(modsList.joined(separator: ", "))")
+            state.addLog("  FTL Data Dir: \(ftlDataPath)")
+        }
+
+        // Build paths for all mod files
+        var modPaths: [String] = []
+        for modFile in modsList {
+            let modPath = "\(modsDir)/\(modFile)"
+
+            guard fileManager.fileExists(atPath: modPath) else {
+                throw InstallationError.fileCopyFailed("Mod file not found: \(modFile)")
+            }
+
+            modPaths.append(modPath)
+        }
+
+        // Patch all mods at once with a single ftlman call
+        if !modPaths.isEmpty {
+            try await runFTLManPatchWithGatekeeperRetry(
+                ftlmanPath: ftlmanPath,
+                modPaths: modPaths,
+                dataDir: ftl.ftlDataPath,
+                state: state
+            )
+        }
     }
 
     private func runFTLManPatchWithGatekeeperRetry(
         ftlmanPath: String,
-        modPath: String,
-        dataDir: String
+        modPaths: [String],
+        dataDir: String,
+        state: InstallationState
     ) async throws {
         do {
-            try await execShellAsync(
-                "'\(ftlmanPath)' patch '\(modPath)' -d '\(dataDir)'"
-            )
+            // Build command with all mod files
+            let modArgs = modPaths.map { "'\($0)'" }.joined(separator: " ")
+            let command = "'\(ftlmanPath)' patch \(modArgs) -d '\(dataDir)'"
+
+            // Log the command being executed
+            let modFileNames = modPaths.map { URL(fileURLWithPath: $0).lastPathComponent }.joined(separator: ", ")
+            await MainActor.run {
+                state.addLog("  Command: ftlman patch \(modFileNames) -d <ftl-data>")
+            }
+
+            try await execShellAsync(command)
         } catch {
             let userAllowed = await showGatekeeperPrompt()
             guard userAllowed else {
@@ -284,8 +327,9 @@ class InstallationManager {
             // Retry recursively after user allows
             try await runFTLManPatchWithGatekeeperRetry(
                 ftlmanPath: ftlmanPath,
-                modPath: modPath,
-                dataDir: dataDir
+                modPaths: modPaths,
+                dataDir: dataDir,
+                state: state
             )
         }
     }
@@ -332,6 +376,27 @@ class InstallationManager {
 
         let jsonData = try JSONSerialization.data(withJSONObject: config, options: .prettyPrinted)
         try jsonData.write(to: URL(fileURLWithPath: configPath))
+    }
+
+    private func readModsList(state: InstallationState? = nil) throws -> [String] {
+        let resourcePath = Bundle.main.resourcePath ?? ""
+        let modsPlistPath = "\(resourcePath)/mods.plist"
+
+        guard fileManager.fileExists(atPath: modsPlistPath) else {
+            return []
+        }
+
+        // Read plist as dictionary
+        guard let plist = NSDictionary(contentsOfFile: modsPlistPath) else {
+            return []
+        }
+
+        // Extract mods array from dictionary
+        guard let modsArray = plist["mods"] as? [String] else {
+            return []
+        }
+
+        return modsArray
     }
 
     private func rollbackChanges(ftl: FTLInstallation) throws {

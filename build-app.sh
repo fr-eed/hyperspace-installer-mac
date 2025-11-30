@@ -1,8 +1,25 @@
 #!/bin/bash
 set -e
 
-# Build Hyperspace Installer for Apple arm64 (default)
-# For other architectures, use: build-scripts/platforms/<arch>.sh
-# For all architectures, use: build-scripts/build-all.sh
+# Build Hyperspace Installer for the current architecture
+# Usage: ./build-app.sh [architecture]
+# Example: ./build-app.sh arm64
 
-"$(dirname "${BASH_SOURCE[0]}")/build-scripts/platforms/arm64.sh"
+ARCH="${1:-arm64}"
+REPO_ROOT="$(dirname "${BASH_SOURCE[0]}")"
+SCRIPTS_DIR="$REPO_ROOT/scripts/build"
+
+# Download deps
+"$SCRIPTS_DIR/download-dependencies.sh"
+
+# Build executable
+"$SCRIPTS_DIR/build-executable.sh" "$ARCH"
+
+# Build installer with basemod
+"$SCRIPTS_DIR/build-installer.sh" \
+  --executable "$REPO_ROOT/release/$ARCH/HyperspaceInstaller" \
+  --mod-files "$REPO_ROOT/external/Hyperspace.ftl" \
+  --icon-path "$REPO_ROOT/HSInstaller.icns" \
+  --installer-name "Hyperspace Installer" \
+  --output-dir "$REPO_ROOT/release/$ARCH" \
+  --arch "$ARCH"

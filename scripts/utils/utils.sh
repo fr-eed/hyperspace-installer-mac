@@ -13,9 +13,9 @@ export REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../" && pwd)"
 export ARCH="${ARCH:-x86_64}"  # Default to x86_64 if not set
 export BUILD_DIR="$REPO_ROOT/.build/release"
 export APP_NAME="HyperspaceInstaller"
-export RELEASE_DIR="$REPO_ROOT/release/$ARCH"
-export APP_DIR="$RELEASE_DIR/$APP_NAME.app"
 export EXTERNAL_DIR="$REPO_ROOT/external"
+
+# RELEASE_DIR and APP_DIR must be set by the caller before sourcing this file
 
 # Read version from VERSION file
 read_version() {

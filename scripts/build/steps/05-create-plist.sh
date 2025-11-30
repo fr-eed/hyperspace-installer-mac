@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-# Step 4: Create Info.plist
-source "$(dirname "${BASH_SOURCE[0]}")/../utils/utils.sh"
+# Step 5: Create Info.plist
+source "$(dirname "${BASH_SOURCE[0]}")/../../utils/utils.sh"
 
-step "Step 4: Creating Info.plist..."
+step "Step 5: Creating Info.plist..."
 
 cat > "$APP_DIR/Contents/Info.plist" <<EOF
 <?xml version="1.0" encoding="UTF-8"?>
@@ -24,7 +24,7 @@ cat > "$APP_DIR/Contents/Info.plist" <<EOF
     <key>CFBundleInfoDictionaryVersion</key>
     <string>6.0</string>
     <key>CFBundleName</key>
-    <string>Hyperspace Installer</string>
+    <string>${CUSTOM_INSTALLER_NAME:-Hyperspace Installer}</string>
     <key>CFBundlePackageType</key>
     <string>APPL</string>
     <key>CFBundleShortVersionString</key>

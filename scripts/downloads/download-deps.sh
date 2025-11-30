@@ -8,7 +8,7 @@ HYPERSPACE_VERSION="v1.20.2"
 # Download dependencies from GitHub releases
 # This is a standalone script with hardcoded dependency versions
 
-SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/build-scripts" && pwd)"
+SCRIPTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)"
 source "$SCRIPTS_DIR/utils/utils.sh"
 source "$SCRIPTS_DIR/utils/github-utils.sh"
 

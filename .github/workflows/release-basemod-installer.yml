@@ -1,0 +1,39 @@
+name: Release Basemod Installer
+
+on:
+  workflow_call:
+    inputs:
+      installer-bundle-version:
+        description: 'Version of the installer bundle'
+        required: true
+        type: string
+      release-tag:
+        description: 'GitHub release tag to attach DMGs to'
+        required: false
+        type: string
+
+jobs:
+  build:
+    uses: fr-eed/hyperspace-mac-autoinstaller/.github/workflows/build-installer.yml@main
+    with:
+      installer-bundle-version: ${{ inputs.installer-bundle-version }}
+      installer-name: "Hyperspace Installer"
+      mod-files: "external/Hyperspace.ftl"
+      icon-path: "HSInstaller.icns"
+
+  attach-to-release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: inputs.release-tag != ''
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dmgs
+          pattern: '*-dmg'
+
+      - name: Upload DMGs to release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ inputs.release-tag }}
+          files: dmgs/*/*.dmg

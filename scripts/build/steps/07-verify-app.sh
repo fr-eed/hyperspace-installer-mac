@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
-# Step 6: Verify app
-source "$(dirname "${BASH_SOURCE[0]}")/../utils/utils.sh"
+# Step 7: Verify app
+source "$(dirname "${BASH_SOURCE[0]}")/../../utils/utils.sh"
 
-step "Step 6: Verifying app..."
+step "Step 7: Verifying app..."
 
 # Verify the app structure
 require_file "$APP_DIR/Contents/MacOS/$APP_NAME" "Executable"

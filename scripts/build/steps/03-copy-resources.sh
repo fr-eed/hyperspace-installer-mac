@@ -2,7 +2,7 @@
 set -e
 
 # Step 3: Bundle resources
-source "$(dirname "${BASH_SOURCE[0]}")/../utils/utils.sh"
+source "$(dirname "${BASH_SOURCE[0]}")/../../utils/utils.sh"
 
 step "Step 3: Bundling resources..."
 
@@ -27,15 +27,26 @@ cp "$EXTERNAL_DIR/MacOS/Hyperspace.command" "$APP_DIR/Contents/Resources/"
 chmod +x "$APP_DIR/Contents/Resources/Hyperspace.command"
 success "Copied Hyperspace.command"
 
-# Copy hyperspace.ftl
-require_file "$EXTERNAL_DIR/Hyperspace.ftl" "Hyperspace.ftl"
-mkdir -p "$APP_DIR/Contents/Resources/mods"
-cp "$EXTERNAL_DIR/Hyperspace.ftl" "$APP_DIR/Contents/Resources/mods/"
-success "Copied Hyperspace.ftl"
 
-# Copy app icon
-require_file "$REPO_ROOT/HSInstaller.icns" "HSInstaller.icns"
-cp "$REPO_ROOT/HSInstaller.icns" "$APP_DIR/Contents/Resources/AppIcon.icns"
-success "Copied HSInstaller.icns as AppIcon.icns"
+# Copy custom mods from exact paths if provided
+if [ -n "$MOD_FILES_PATHS" ]; then
+    while IFS= read -r modpath; do
+        [ -z "$modpath" ] && continue
+        if [ -f "$modpath" ]; then
+            cp "$modpath" "$APP_DIR/Contents/Resources/mods/"
+            success "Copied mod: $(basename "$modpath")"
+        fi
+    done <<< "$MOD_FILES_PATHS"
+fi
+
+# Copy custom icon or default
+if [ -n "$CUSTOM_ICON_PATH" ] && [ -f "$CUSTOM_ICON_PATH" ]; then
+    cp "$CUSTOM_ICON_PATH" "$APP_DIR/Contents/Resources/AppIcon.icns"
+    success "Copied custom icon"
+else
+    require_file "$REPO_ROOT/HSInstaller.icns" "HSInstaller.icns"
+    cp "$REPO_ROOT/HSInstaller.icns" "$APP_DIR/Contents/Resources/AppIcon.icns"
+    success "Copied default icon"
+fi
 
 echo ""
