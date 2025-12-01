@@ -3,10 +3,12 @@ name: Release Basemod Installer
 on:
   workflow_call:
     inputs:
-      installer-bundle-version:
-        description: 'Version of the installer bundle'
-        required: true
+      release-tag:
+        description: 'GitHub release tag to attach DMGs to'
+        required: false
         type: string
+  workflow_dispatch:
+    inputs:
       release-tag:
         description: 'GitHub release tag to attach DMGs to'
         required: false
@@ -22,21 +24,28 @@ jobs:
       - name: Checkout this repo
         uses: actions/checkout@v4
 
+      - name: Retrieve Hyperspace basemod version (from .deps-versions)
+        id: basemod-version
+        run: |
+          HYPERSPACE_VERSION=$(grep 'HYPERSPACE_VERSION' .deps-versions | cut -d'"' -f2)
+          echo "HYPERSPACE_VERSION=$HYPERSPACE_VERSION" >> $GITHUB_OUTPUT
+
       - name: Download Hyperspace.ftl from release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p external
-          gh release download -R fr-eed/FTL-Hyperspace-Dino -p "*-MacOS.zip" -O /tmp/hyperspace.zip
+          gh release download "${{ steps.basemod-version.outputs.HYPERSPACE_VERSION }}" -R fr-eed/FTL-Hyperspace-Dino -p "*-MacOS.zip" -O /tmp/hyperspace.zip
           unzip -q /tmp/hyperspace.zip -d /tmp/hyperspace
           mv /tmp/hyperspace/Hyperspace.ftl external/Hyperspace.ftl
 
       - name: Build installer for ${{ matrix.arch }}
+        id: build
         uses: fr-eed/hyperspace-installer-mac/actions/build-installer@main
         with:
           arch: ${{ matrix.arch }}
-          installer-bundle-version: ${{ inputs.installer-bundle-version }}
-          installer-name: "Hyperspace Installer"
+          installer-bundle-version: ${{ steps.basemod-version.outputs.HYPERSPACE_VERSION }}
+          installer-name: "Hyperspace"
           mod-files: "${{ github.workspace }}/external/Hyperspace.ftl"
           icon-path: "${{ github.workspace }}/HSInstaller.icns"
 
@@ -45,4 +54,4 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ inputs.release-tag }}
-          files: output/${{ matrix.arch }}/*.dmg
+          files: ${{ steps.build.outputs.dmg-path }}
