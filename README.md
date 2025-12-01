@@ -89,7 +89,7 @@ Fork this repository and edit `build-app.sh` to customize for your needs:
 # Build the installer
 ./build-app.sh
 
-# Outputs to: release/{arch}/HyperspaceInstaller.app and creates DMG
+# Outputs to: release/{arch}/{--installer-name}.app and creates DMG
 ```
 
 Edit `build-app.sh` to customize:
