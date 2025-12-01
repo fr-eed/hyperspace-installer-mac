@@ -81,6 +81,7 @@ public struct WelcomeView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     requirementItem("FTL: Faster Than Light v1.6.12 or v1.6.13")
                     requirementItem("Administrator privileges")
+                    requirementItem("Documents folder access permission (to save mod manager in Games folder)")
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -98,9 +99,16 @@ public struct WelcomeView: View {
                 .keyboardShortcut(.cancelAction)
 
                 Button(action: {
+                    startUninstall()
+                }) {
+                    Text("Uninstall")
+                        .frame(maxWidth: .infinity)
+                }
+
+                Button(action: {
                     state.nextStep()
                 }) {
-                    Text("Start Installation")
+                    Text("Install")
                         .frame(maxWidth: .infinity)
                 }
                 .keyboardShortcut(.defaultAction)
@@ -170,5 +178,10 @@ public struct WelcomeView: View {
             Text(text)
                 .font(.system(size: 13))
         }
+    }
+
+    private func startUninstall() {
+        state.isUninstalling = true
+        state.nextStep()
     }
 }

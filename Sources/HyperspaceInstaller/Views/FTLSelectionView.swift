@@ -108,7 +108,10 @@ public struct FTLSelectionView: View {
             Spacer()
 
             HStack(spacing: 12) {
-                Button(action: { state.currentStep = .welcome }) {
+                Button(action: {
+                    state.isUninstalling = false
+                    state.currentStep = .welcome
+                }) {
                     Text("Back")
                         .frame(maxWidth: .infinity)
                 }
@@ -117,10 +120,20 @@ public struct FTLSelectionView: View {
                 Button(action: {
                     if let ftl = state.selectedFTL {
                         let manager = InstallationManager.shared
-                        if manager.isHyperspaceInstalled(ftl: ftl) {
-                            state.showReinstallConfirmation = true
+                        if state.isUninstalling {
+                            // For uninstall, check if Hyperspace is installed
+                            if manager.isHyperspaceInstalled(ftl: ftl) {
+                                state.nextStep()
+                            } else {
+                                state.showHyperspaceNotFoundAlert = true
+                            }
                         } else {
-                            state.nextStep()
+                            // For install, show confirmation if already installed
+                            if manager.isHyperspaceInstalled(ftl: ftl) {
+                                state.showReinstallConfirmation = true
+                            } else {
+                                state.nextStep()
+                            }
                         }
                     }
                 }) {
@@ -175,6 +188,11 @@ public struct FTLSelectionView: View {
             }
         } message: {
             Text("Hyperspace is already installed on this FTL installation. Do you want to reinstall it?")
+        }
+        .alert("Hyperspace Not Found", isPresented: $state.showHyperspaceNotFoundAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("Hyperspace is not installed on this FTL installation. Uninstall is not possible.")
         }
         .onAppear {
             if !state.hasDetectedFTL {

@@ -19,6 +19,8 @@ struct HyperspaceInstallerApp: App {
                         FTLSelectionView(state: state)
                     case .installing:
                         InstallationView(state: state)
+                    case .uninstalling:
+                        UninstallView(state: state)
                     case .summary:
                         SummaryView(state: state)
                     }

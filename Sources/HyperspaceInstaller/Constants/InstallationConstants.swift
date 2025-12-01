@@ -101,7 +101,7 @@ public enum InstallationError: LocalizedError {
     public var recoverySuggestion: String? {
         switch self {
         case .directoryCreationFailed:
-            return "Check that you have write permissions to your Documents folder"
+            return "Check that you have write permissions to your ~/Games folder"
         case .fileCopyFailed:
             return "Ensure the source files exist and you have write permissions"
         case .configModificationFailed:

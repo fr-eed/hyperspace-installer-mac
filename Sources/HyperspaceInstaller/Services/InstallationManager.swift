@@ -52,7 +52,7 @@ class InstallationManager {
                 action: { try self.createInstallationDirectory() }
             )
 
-            // Step 2: Copy files to user's Documents
+            // Step 2: Copy files to ~/Games/FTLHyperspace
             await updateProgress(state: state, step: 2, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
@@ -146,6 +146,115 @@ class InstallationManager {
         }
     }
 
+    func uninstallHyperspace(
+        ftl: FTLInstallation,
+        state: InstallationState
+    ) async {
+        let ftlPath = ftl.path
+
+        await MainActor.run {
+            state.isInstalling = true
+            state.installLog.removeAll()
+            state.installationError = nil
+            state.installationSuccess = false
+
+            do {
+                try LogManager.shared.initializeLog()
+            } catch {
+                state.addLog("Warning: Could not initialize log file: \(error)")
+            }
+
+            state.addLog("=== Hyperspace Uninstallation Started ===")
+            state.addLog("FTL Location: \(ftlPath)")
+            state.addLog("")
+        }
+
+        do {
+            // Step 1: Restore Info.plist
+            await updateProgress(state: state, step: 1, total: 4)
+            try await installStep(
+                state: state,
+                title: "Restoring FTL configuration",
+                action: { try self.restoreInfoPlist(ftl: ftl) }
+            )
+
+            // Step 2: Remove Hyperspace files
+            await updateProgress(state: state, step: 2, total: 4)
+            try await installStep(
+                state: state,
+                title: "Removing Hyperspace files",
+                action: { try self.removeHyperspaceFiles(ftl: ftl) }
+            )
+
+            // Step 3: Restore FTL data
+            await updateProgress(state: state, step: 3, total: 4)
+            try await installStep(
+                state: state,
+                title: "Restoring FTL data",
+                action: { try self.restoreFTLData(ftl: ftl) }
+            )
+
+            // Step 4: Codesign FTL.app
+            await updateProgress(state: state, step: 4, total: 4)
+            await MainActor.run {
+                state.addLog("• Signing application...")
+            }
+            try self.codesignFTLApp(ftl: ftl)
+            await MainActor.run {
+                state.addLog("  ✓ Done")
+            }
+
+            await MainActor.run {
+                state.addLog("")
+                state.addLog("=== Uninstallation Complete ===")
+                state.setSuccess()
+            }
+
+        } catch {
+            await MainActor.run {
+                state.setError("Uninstallation failed: \(error.localizedDescription)")
+                state.addLog("ERROR: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private func restoreInfoPlist(ftl: FTLInstallation) throws {
+        let infoPlistPath = "\(ftl.path)/Contents/Info.plist"
+        let backupPath = "\(infoPlistPath).vanilla"
+
+        if fileManager.fileExists(atPath: backupPath) {
+            try fileManager.removeItem(atPath: infoPlistPath)
+            try fileManager.copyItem(atPath: backupPath, toPath: infoPlistPath)
+        } else {
+            throw NSError(domain: "Backup Info.plist not found", code: -1)
+        }
+    }
+
+    private func removeHyperspaceFiles(ftl: FTLInstallation) throws {
+        let macosDir = "\(ftl.path)/Contents/MacOS"
+        let files = try fileManager.contentsOfDirectory(atPath: macosDir)
+
+        for file in files {
+            if file.hasPrefix("Hyperspace") {
+                let filePath = "\(macosDir)/\(file)"
+                try? fileManager.removeItem(atPath: filePath)
+            }
+        }
+    }
+
+    private func restoreFTLData(ftl: FTLInstallation) throws {
+        let dataDir = ftl.ftlDataPath
+        let ftlDatPath = "\(dataDir)/ftl.dat"
+        let vanillaDatPath = "\(dataDir)/ftl.dat.vanilla"
+
+        if fileManager.fileExists(atPath: vanillaDatPath) {
+            try fileManager.removeItem(atPath: ftlDatPath)
+            try fileManager.copyItem(atPath: vanillaDatPath, toPath: ftlDatPath)
+        } else {
+            throw NSError(domain: "Vanilla FTL data not found", code: -1)
+        }
+    }
+
     private func createInstallationDirectory() throws {
         let baseDir = InstallationPaths.baseDirectory(homeDirectory: homeDirectory)
         let modsDir = InstallationPaths.modsDirectory(homeDirectory: homeDirectory)
@@ -211,7 +320,7 @@ class InstallationManager {
 
     private func backupInfoPlist(ftl: FTLInstallation) throws {
         let infoPlistPath = "\(ftl.path)/Contents/Info.plist"
-        let backupPath = "\(infoPlistPath).bak"
+        let backupPath = "\(infoPlistPath).vanilla"
 
         try? fileManager.removeItem(atPath: backupPath)
         try fileManager.copyItem(atPath: infoPlistPath, toPath: backupPath)
@@ -404,7 +513,7 @@ class InstallationManager {
 
     private func rollbackChanges(ftl: FTLInstallation) throws {
         let infoPlistPath = "\(ftl.path)/Contents/Info.plist"
-        let backupPath = "\(infoPlistPath).bak"
+        let backupPath = "\(infoPlistPath).vanilla"
 
         if fileManager.fileExists(atPath: backupPath) {
             try fileManager.removeItem(atPath: infoPlistPath)

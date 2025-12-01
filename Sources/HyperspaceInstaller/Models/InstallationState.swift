@@ -6,11 +6,13 @@ public class InstallationState: ObservableObject {
     @Published public var detectedFTLPaths: [FTLInstallation] = []
     @Published public var selectedFTL: FTLInstallation?
     @Published public var isInstalling: Bool = false
+    @Published public var isUninstalling: Bool = false
     @Published public var installProgress: Double = 0.0
     @Published public var installLog: [String] = []
     @Published public var installationError: String?
     @Published public var installationSuccess: Bool = false
     @Published public var showReinstallConfirmation: Bool = false
+    @Published public var showHyperspaceNotFoundAlert: Bool = false
     @Published public var hasDetectedFTL: Bool = false
 
     public init() {}
@@ -45,8 +47,10 @@ public class InstallationState: ObservableObject {
         case .welcome:
             currentStep = .ftlSelection
         case .ftlSelection:
-            currentStep = .installing
+            currentStep = isUninstalling ? .uninstalling : .installing
         case .installing:
+            currentStep = .summary
+        case .uninstalling:
             currentStep = .summary
         case .summary:
             break
@@ -58,10 +62,13 @@ public class InstallationState: ObservableObject {
         detectedFTLPaths = []
         selectedFTL = nil
         isInstalling = false
+        isUninstalling = false
         installProgress = 0.0
         installLog = []
         installationError = nil
         installationSuccess = false
+        showReinstallConfirmation = false
+        showHyperspaceNotFoundAlert = false
         hasDetectedFTL = false
     }
 
@@ -76,5 +83,6 @@ public enum InstallStep {
     case welcome
     case ftlSelection
     case installing
+    case uninstalling
     case summary
 }
