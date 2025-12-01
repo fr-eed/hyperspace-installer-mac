@@ -81,7 +81,6 @@ public struct WelcomeView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     requirementItem("FTL: Faster Than Light v1.6.12 or v1.6.13")
                     requirementItem("Administrator privileges")
-                    requirementItem("Documents folder access (for mod manager)")
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
