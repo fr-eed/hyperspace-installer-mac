@@ -10,8 +10,7 @@ REPO_ROOT="$(dirname "${BASH_SOURCE[0]}")"
 SCRIPTS_DIR="$REPO_ROOT/scripts"
 
 # Download deps
-"$SCRIPTS_DIR/downloads/download-deps.sh"
-
+"$SCRIPTS_DIR/downloads/download-deps.sh" --arch "$ARCH"
 
 
 # Build executable

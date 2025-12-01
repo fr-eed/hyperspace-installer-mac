@@ -4,11 +4,8 @@ set -e
 # Step 5: Create Info.plist
 source "$(dirname "${BASH_SOURCE[0]}")/../../utils/utils.sh"
 
-# Source dependency versions
-DEPS_VERSIONS_FILE="$REPO_ROOT/.deps-versions"
-if [ -f "$DEPS_VERSIONS_FILE" ]; then
-    source "$DEPS_VERSIONS_FILE"
-fi
+# Source actual downloaded versions
+source "$EXTERNAL_DIR/.downloaded-versions"
 
 step "Step 5: Creating Info.plist..."
 echo "  Bundle Name: $INSTALLER_NAME"

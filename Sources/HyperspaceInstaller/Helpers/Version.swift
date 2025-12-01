@@ -1,4 +1,4 @@
 // Generated at build time - DO NOT EDIT
 public struct InstallerVersion {
-    public static let version = "1.0.3"
+    public static let version = "1.0.4"
 }
