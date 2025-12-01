@@ -52,30 +52,14 @@ jobs:
 
       - name: Build installer for ${{ matrix.arch }}
         run: |
-          WORKSPACE_ROOT=$(pwd)
-          ABSOLUTE_MODS=""
-          for mod in ${{ inputs.mod-files }}; do
-            ABSOLUTE_MODS="$ABSOLUTE_MODS $WORKSPACE_ROOT/$mod"
-          done
-
-          ICON_PATH=""
-          if [ -n "${{ inputs.icon-path }}" ]; then
-            ICON_PATH="$WORKSPACE_ROOT/${{ inputs.icon-path }}"
-          fi
-
-          BUILD_CMD="hyperspace-installer-mac/scripts/build/build-installer.sh \
-            --executable $WORKSPACE_ROOT/hyperspace-installer-mac/release/${{ matrix.arch }}/HyperspaceInstaller \
-            --mod-files \"$ABSOLUTE_MODS\" \
-            --installer-name \"${{ inputs.installer-name }}\" \
-            --installer-bundle-version \"${{ inputs.installer-bundle-version }}\" \
-            --output-dir $WORKSPACE_ROOT/output/${{ matrix.arch }} \
-            --arch \"${{ matrix.arch }}\""
-
-          if [ -n "$ICON_PATH" ]; then
-            BUILD_CMD="$BUILD_CMD --icon-path \"$ICON_PATH\""
-          fi
-
-          eval "$BUILD_CMD"
+          hyperspace-installer-mac/scripts/build/build-installer.sh \
+            --executable $(pwd)/hyperspace-installer-mac/release/${{ matrix.arch }}/HyperspaceInstaller \
+            --mod-files "${{ inputs.mod-files }}" \
+            --installer-name "${{ inputs.installer-name }}" \
+            --installer-bundle-version "${{ inputs.installer-bundle-version }}" \
+            --output-dir $(pwd)/output/${{ matrix.arch }} \
+            --arch "${{ matrix.arch }}" \
+            --icon-path "${{ inputs.icon-path }}"
 
       - name: Upload DMG artifact
         uses: actions/upload-artifact@v4
