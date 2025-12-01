@@ -1,5 +1,7 @@
   # Hyperspace macOS Installer
 
+> ⚠️ **Under Development** — This project is experimental and uses a [fork of FTL Hyperspace](https://github.com/fr-eed/FTL-Hyperspace-Dino) with macOS support. Once macOS support is merged into the main FTL Hyperspace project, this will be updated to use the official repository.
+
 A native macOS installer for [FTL: Hyperspace](https://github.com/FTL-Hyperspace/FTL-Hyperspace), a binary mod for [FTL: Faster Than Light](https://subsetgames.com/ftl.html). Handles installation of Hyperspace into your FTL game directory and manages mod dependencies with [ftlman](https://github.com/afishhh/ftlman).
 
 ## What It Does
