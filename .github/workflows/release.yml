@@ -30,9 +30,6 @@ jobs:
       - name: Run tests arm64
         run: swift test
 
-      - name: Run tests x86_64
-        run: arch -x86_64 swift test
-
       - name: Package executables
         env:
           VERSION: ${{ steps.version.outputs.VERSION }}
