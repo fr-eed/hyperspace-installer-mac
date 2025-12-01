@@ -48,7 +48,6 @@ jobs:
           hyperspace-version: ${{ steps.basemod-version.outputs.HYPERSPACE_VERSION }}
           installer-name: "Hyperspace"
           mod-files: "${{ github.workspace }}/external/Hyperspace.ftl"
-          icon-path: "${{ github.workspace }}/HSInstaller.icns"
 
       - name: Upload DMG to release
         if: inputs.release-tag != ''
