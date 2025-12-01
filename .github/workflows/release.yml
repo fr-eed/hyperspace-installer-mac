@@ -15,12 +15,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run tests arm64
-        run: swift test
-
-      - name: Run tests x86_64
-        run: arch -x86_64 swift test
-
       - name: Read version
         id: version
         run: echo "VERSION=$(cat VERSION)" >> $GITHUB_OUTPUT
@@ -32,6 +26,12 @@ jobs:
 
       - name: Build executables
         run: ./scripts/build/build-executable-all.sh
+
+      - name: Run tests arm64
+        run: swift test
+
+      - name: Run tests x86_64
+        run: arch -x86_64 swift test
 
       - name: Package executables
         env:
