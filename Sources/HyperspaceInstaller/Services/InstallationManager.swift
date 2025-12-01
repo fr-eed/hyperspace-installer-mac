@@ -322,8 +322,10 @@ class InstallationManager {
         let infoPlistPath = "\(ftl.path)/Contents/Info.plist"
         let backupPath = "\(infoPlistPath).vanilla"
 
-        try? fileManager.removeItem(atPath: backupPath)
-        try fileManager.copyItem(atPath: infoPlistPath, toPath: backupPath)
+        // Only create backup if it doesn't already exist
+        if !fileManager.fileExists(atPath: backupPath) {
+            try fileManager.copyItem(atPath: infoPlistPath, toPath: backupPath)
+        }
     }
 
     private func modifyInfoPlist(ftl: FTLInstallation) throws {

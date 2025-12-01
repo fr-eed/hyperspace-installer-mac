@@ -11,3 +11,4 @@ release
 
 *.app
 
+Sources/HyperspaceInstaller/Helpers/Version.swift
