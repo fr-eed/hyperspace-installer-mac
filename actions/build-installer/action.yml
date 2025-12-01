@@ -1,0 +1,67 @@
+name: Build Hyperspace Installer
+description: Build macOS installer with mods
+
+inputs:
+  arch:
+    description: 'Target architecture (x86_64 or arm64)'
+    required: true
+  installer-bundle-version:
+    description: 'Version of the installer bundle (e.g., 1.0.0)'
+    required: true
+  mod-files:
+    description: 'Space-separated paths to mod files'
+    required: true
+  installer-name:
+    description: 'Installer display name'
+    required: true
+  icon-path:
+    description: 'Optional path to .icns icon file'
+    required: false
+
+outputs:
+  dmg-path:
+    description: 'Path to the built DMG file'
+    value: ${{ steps.build.outputs.dmg-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout hyperspace-installer-mac
+      uses: actions/checkout@v4
+      with:
+        repository: fr-eed/hyperspace-installer-mac
+        path: hyperspace-installer-mac
+
+    - name: Download executables
+      env:
+        GH_TOKEN: ${{ github.token }}
+      shell: bash
+      run: |
+        cd hyperspace-installer-mac
+        ./scripts/downloads/download-executables.sh
+
+    - name: Download dependencies
+      env:
+        GH_TOKEN: ${{ github.token }}
+      shell: bash
+      run: |
+        cd hyperspace-installer-mac
+        ./scripts/downloads/download-deps.sh
+
+    - name: Build installer
+      id: build
+      shell: bash
+      run: |
+        WORKSPACE_ROOT=$(pwd)
+        hyperspace-installer-mac/scripts/build/build-installer.sh \
+          --executable $WORKSPACE_ROOT/hyperspace-installer-mac/release/${{ inputs.arch }}/HyperspaceInstaller \
+          --mod-files "${{ inputs.mod-files }}" \
+          --installer-name "${{ inputs.installer-name }}" \
+          --installer-bundle-version "${{ inputs.installer-bundle-version }}" \
+          --output-dir $WORKSPACE_ROOT/output/${{ inputs.arch }} \
+          --arch "${{ inputs.arch }}" \
+          --icon-path "${{ inputs.icon-path }}"
+
+        # Output the DMG path
+        DMG_PATH=$(ls $WORKSPACE_ROOT/output/${{ inputs.arch }}/*.dmg 2>/dev/null | head -1)
+        echo "dmg-path=$DMG_PATH" >> $GITHUB_OUTPUT

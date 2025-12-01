@@ -15,35 +15,34 @@ on:
 jobs:
   build:
     runs-on: macos-latest
+    strategy:
+      matrix:
+        arch: [x86_64, arm64]
     steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+
       - name: Download Hyperspace.ftl from release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p external
-          # Download the MacOS zip release
           gh release download -R fr-eed/FTL-Hyperspace-Dino -p "*-MacOS.zip" -O /tmp/hyperspace.zip
-          # Extract and get Hyperspace.ftl
           unzip -q /tmp/hyperspace.zip -d /tmp/hyperspace
-          # Move Hyperspace.ftl to external directory
           mv /tmp/hyperspace/Hyperspace.ftl external/Hyperspace.ftl
 
-      - name: Build basemod installers
-        uses: fr-eed/hyperspace-installer-mac/.github/workflows/build-installer.yml@main
+      - name: Build installer for ${{ matrix.arch }}
+        uses: fr-eed/hyperspace-installer-mac/actions/build-installer@main
         with:
+          arch: ${{ matrix.arch }}
           installer-bundle-version: ${{ inputs.installer-bundle-version }}
           installer-name: "Hyperspace Installer"
           mod-files: "${{ github.workspace }}/external/Hyperspace.ftl"
-          icon-path: "HSInstaller.icns"
+          icon-path: "${{ github.workspace }}/HSInstaller.icns"
 
-      - name: Download DMG artifacts
-        uses: actions/download-artifact@v4
-        with:
-          path: artifacts
-
-      - name: Upload DMGs to release
+      - name: Upload DMG to release
         if: inputs.release-tag != ''
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ inputs.release-tag }}
-          files: artifacts/**/*.dmg
+          files: output/${{ matrix.arch }}/*.dmg
