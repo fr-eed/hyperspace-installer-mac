@@ -63,7 +63,7 @@ enum InstallationPaths {
 
 // MARK: - Installation Constants
 
-let INSTALLATION_STEPS_TOTAL: Double = 10
+let INSTALLATION_STEPS_TOTAL: Double = 9
 
 // MARK: - Error Types
 

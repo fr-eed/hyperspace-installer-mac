@@ -60,48 +60,40 @@ class InstallationManager {
                 action: { try self.copyHyperspaceFiles(resourcePath: resourcePath) }
             )
 
-            // Step 3: Backup original Info.plist
+            // Step 3: Modify Info.plist
             await updateProgress(state: state, step: 3, total: INSTALLATION_STEPS_TOTAL)
-            try await installStep(
-                state: state,
-                title: "Backing up FTL configuration",
-                action: { try self.backupInfoPlist(ftl: ftl) }
-            )
-
-            // Step 4: Modify Info.plist
-            await updateProgress(state: state, step: 4, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Modifying FTL.app configuration",
                 action: { try self.modifyInfoPlist(ftl: ftl) }
             )
 
-            // Step 5: Copy dylib
-            await updateProgress(state: state, step: 5, total: INSTALLATION_STEPS_TOTAL)
+            // Step 4: Copy dylib
+            await updateProgress(state: state, step: 4, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Copying Hyperspace dylib",
                 action: { try self.copyDylib(ftl: ftl, resourcePath: resourcePath) }
             )
 
-            // Step 6: Copy Hyperspace.command
-            await updateProgress(state: state, step: 6, total: INSTALLATION_STEPS_TOTAL)
+            // Step 5: Copy Hyperspace.command
+            await updateProgress(state: state, step: 5, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Copying launcher script",
                 action: { try self.copyHyperspaceCommand(ftl: ftl, resourcePath: resourcePath) }
             )
 
-            // Step 7: Edit Hyperspace.command
-            await updateProgress(state: state, step: 7, total: INSTALLATION_STEPS_TOTAL)
+            // Step 6: Edit Hyperspace.command
+            await updateProgress(state: state, step: 6, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Updating launcher script",
                 action: { try self.editHyperspaceCommand(ftl: ftl) }
             )
 
-            // Step 8: Run ftlman patch
-            await updateProgress(state: state, step: 8, total: INSTALLATION_STEPS_TOTAL)
+            // Step 7: Run ftlman patch
+            await updateProgress(state: state, step: 7, total: INSTALLATION_STEPS_TOTAL)
             await MainActor.run {
                 state.addLog("• Patching FTL mod data...")
             }
@@ -110,16 +102,16 @@ class InstallationManager {
                 state.addLog("  ✓ Patching complete")
             }
 
-            // Step 9: Create ftlman config
-            await updateProgress(state: state, step: 9, total: INSTALLATION_STEPS_TOTAL)
+            // Step 8: Create ftlman config
+            await updateProgress(state: state, step: 8, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Creating ftlman configuration",
                 action: { try self.createFTLManConfig(ftl: ftl) }
             )
 
-            // Step 10: Codesign FTL.app
-            await updateProgress(state: state, step: 10, total: INSTALLATION_STEPS_TOTAL)
+            // Step 9: Codesign FTL.app
+            await updateProgress(state: state, step: 9, total: INSTALLATION_STEPS_TOTAL)
             await MainActor.run {
                 state.addLog("• Signing application...")
             }
@@ -220,14 +212,10 @@ class InstallationManager {
 
     private func restoreInfoPlist(ftl: FTLInstallation) throws {
         let infoPlistPath = "\(ftl.path)/Contents/Info.plist"
-        let backupPath = "\(infoPlistPath).vanilla"
 
-        if fileManager.fileExists(atPath: backupPath) {
-            try fileManager.removeItem(atPath: infoPlistPath)
-            try fileManager.copyItem(atPath: backupPath, toPath: infoPlistPath)
-        } else {
-            throw NSError(domain: "Backup Info.plist not found", code: -1)
-        }
+        try Self.execShell(
+            "plutil -replace CFBundleExecutable -string 'FTL' '\(infoPlistPath)'"
+        )
     }
 
     private func removeHyperspaceFiles(ftl: FTLInstallation) throws {
@@ -249,7 +237,7 @@ class InstallationManager {
 
         if fileManager.fileExists(atPath: vanillaDatPath) {
             try fileManager.removeItem(atPath: ftlDatPath)
-            try fileManager.copyItem(atPath: vanillaDatPath, toPath: ftlDatPath)
+            try fileManager.moveItem(atPath: vanillaDatPath, toPath: ftlDatPath)
         } else {
             throw NSError(domain: "Vanilla FTL data not found", code: -1)
         }
@@ -315,16 +303,6 @@ class InstallationManager {
 
             try? fileManager.removeItem(atPath: destPath)
             try fileManager.copyItem(atPath: sourcePath, toPath: destPath)
-        }
-    }
-
-    private func backupInfoPlist(ftl: FTLInstallation) throws {
-        let infoPlistPath = "\(ftl.path)/Contents/Info.plist"
-        let backupPath = "\(infoPlistPath).vanilla"
-
-        // Only create backup if it doesn't already exist
-        if !fileManager.fileExists(atPath: backupPath) {
-            try fileManager.copyItem(atPath: infoPlistPath, toPath: backupPath)
         }
     }
 
@@ -514,13 +492,7 @@ class InstallationManager {
     }
 
     private func rollbackChanges(ftl: FTLInstallation) throws {
-        let infoPlistPath = "\(ftl.path)/Contents/Info.plist"
-        let backupPath = "\(infoPlistPath).vanilla"
-
-        if fileManager.fileExists(atPath: backupPath) {
-            try fileManager.removeItem(atPath: infoPlistPath)
-            try fileManager.copyItem(atPath: backupPath, toPath: infoPlistPath)
-        }
+        try restoreInfoPlist(ftl: ftl)
     }
 
     // MARK: - Helper Methods
