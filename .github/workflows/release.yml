@@ -38,11 +38,45 @@ jobs:
           tar -czf "HyperspaceInstaller-$VERSION-executables.tar.gz" x86_64/HyperspaceInstaller arm64/HyperspaceInstaller
           ls -lh "HyperspaceInstaller-$VERSION-executables.tar.gz"
 
+      - name: Get latest tag for changelog
+        id: latest_tag
+        run: |
+          LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
+          echo "HAS_LATEST_TAG=$([[ -n "$LATEST_TAG" ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
+
+      - name: Create release body with changelog
+        id: release_body
+        run: |
+          BODY="# Hyperspace Installer for Mac
+
+          ## Download
+
+          Choose the right file for your Mac:
+
+          - **Apple Silicon** (M1 - M4): \`Hyperspace-*-arm64.dmg\`
+          - **Intel**: \`Hyperspace-*-x86_64.dmg\`
+
+          Not sure? Click  → **About This Mac** → check the **Chip** line. If it says \"Apple M...\" you have Apple Silicon."
+
+          if [[ "${{ steps.latest_tag.outputs.HAS_LATEST_TAG }}" == "true" ]]; then
+            BODY="$BODY
+
+          ## Full Changelog
+
+          https://github.com/fr-eed/hyperspace-installer-mac/compare/${{ steps.latest_tag.outputs.LATEST_TAG }}...v${{ steps.version.outputs.VERSION }}"
+          fi
+
+          echo "BODY<<EOF" >> $GITHUB_ENV
+          echo "$BODY" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.version.outputs.VERSION }}
           files: release/HyperspaceInstaller-${{ steps.version.outputs.VERSION }}-executables.tar.gz
+          body: ${{ env.BODY }}
 
   build-basemod:
     needs: build-and-release
