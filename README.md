@@ -19,7 +19,7 @@ This project can be used as a base to create custom installers for other FTL mod
 
 ## Requirements
 
-- **macOS** 13.0 or later
+- **macOS** 14.0 or later (current Hyperspace base mod requirement. Might change in future)
 - **FTL: Faster Than Light** v1.6.12 or v1.6.13
 - Administrator privileges for installation
 
