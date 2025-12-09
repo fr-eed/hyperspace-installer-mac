@@ -36,7 +36,7 @@ cat > "$INSTALLER_APP_DIR/Contents/Info.plist" <<EOF
     <key>CFBundleVersion</key>
     <string>$INSTALLER_BUNDLE_VERSION</string>
     <key>LSMinimumSystemVersion</key>
-    <string>13.0</string>
+    <string>14.0</string>
     <key>NSHighResolutionCapable</key>
     <true/>
     <key>NSPrincipalClass</key>
