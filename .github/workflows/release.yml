@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Read version
         id: version
@@ -43,30 +45,13 @@ jobs:
         run: |
           LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
           echo "LATEST_TAG=$LATEST_TAG" >> $GITHUB_OUTPUT
-          echo "HAS_LATEST_TAG=$([[ -n "$LATEST_TAG" ]] && echo 'true' || echo 'false')" >> $GITHUB_OUTPUT
 
-      - name: Create release body with changelog
+      - name: Generate release body from template
         id: release_body
         run: |
-          BODY="# Hyperspace Installer for Mac
-
-          ## Download
-
-          Choose the right file for your Mac:
-
-          - **Apple Silicon** (M1 - M4): \`Hyperspace-*-arm64.dmg\`
-          - **Intel**: \`Hyperspace-*-x86_64.dmg\`
-
-          Not sure? Click  → **About This Mac** → check the **Chip** line. If it says \"Apple M...\" you have Apple Silicon."
-
-          if [[ "${{ steps.latest_tag.outputs.HAS_LATEST_TAG }}" == "true" ]]; then
-            BODY="$BODY
-
-          ## Full Changelog
-
-          https://github.com/fr-eed/hyperspace-installer-mac/compare/${{ steps.latest_tag.outputs.LATEST_TAG }}...v${{ steps.version.outputs.VERSION }}"
-          fi
-
+          BODY=$(cat .github/RELEASE_BODY.md)
+          BODY="${BODY//LATEST_TAG/${{ steps.latest_tag.outputs.LATEST_TAG }}}"
+          BODY="${BODY//CURRENT_VERSION/v${{ steps.version.outputs.VERSION }}}"
           echo "BODY<<EOF" >> $GITHUB_ENV
           echo "$BODY" >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
