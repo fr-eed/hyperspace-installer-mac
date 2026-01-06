@@ -1,3 +1,3 @@
 # Dependency versions default. Can be overridden by scripts.
 FTLMAN_VERSION="v0.6.6"
-HYPERSPACE_VERSION="v1.20.7" # The alignment update
+HYPERSPACE_VERSION="v1.20.8" # MacOS packaging update

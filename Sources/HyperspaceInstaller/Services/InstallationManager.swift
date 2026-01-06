@@ -84,16 +84,8 @@ class InstallationManager {
                 action: { try self.copyHyperspaceCommand(ftl: ftl, resourcePath: resourcePath) }
             )
 
-            // Step 6: Edit Hyperspace.command
+            // Step 6: Run ftlman patch
             await updateProgress(state: state, step: 6, total: INSTALLATION_STEPS_TOTAL)
-            try await installStep(
-                state: state,
-                title: "Updating launcher script",
-                action: { try self.editHyperspaceCommand(ftl: ftl) }
-            )
-
-            // Step 7: Run ftlman patch
-            await updateProgress(state: state, step: 7, total: INSTALLATION_STEPS_TOTAL)
             await MainActor.run {
                 state.addLog("• Patching FTL mod data...")
             }
@@ -102,16 +94,16 @@ class InstallationManager {
                 state.addLog("  ✓ Patching complete")
             }
 
-            // Step 8: Create ftlman config
-            await updateProgress(state: state, step: 8, total: INSTALLATION_STEPS_TOTAL)
+            // Step 7: Create ftlman config
+            await updateProgress(state: state, step: 7, total: INSTALLATION_STEPS_TOTAL)
             try await installStep(
                 state: state,
                 title: "Creating ftlman configuration",
                 action: { try self.createFTLManConfig(ftl: ftl) }
             )
 
-            // Step 9: Codesign FTL.app
-            await updateProgress(state: state, step: 9, total: INSTALLATION_STEPS_TOTAL)
+            // Step 8: Codesign FTL.app
+            await updateProgress(state: state, step: 8, total: INSTALLATION_STEPS_TOTAL)
             await MainActor.run {
                 state.addLog("• Signing application...")
             }
@@ -338,22 +330,7 @@ class InstallationManager {
         try Self.execShell("chmod +x '\(destPath)'")
     }
 
-    private func editHyperspaceCommand(ftl: FTLInstallation) throws {
-        let scriptPath = "\(ftl.path)/Contents/MacOS/Hyperspace.command"
 
-        // Read the file
-        let content = try String(contentsOfFile: scriptPath, encoding: .utf8)
-
-        // Replace the dylib version
-        let updated = content.replacingOccurrences(
-            of: "Hyperspace\\.1\\.6\\.[0-9]+\\.amd64\\.dylib",
-            with: "Hyperspace.\(ftl.dylibVersion).amd64.dylib",
-            options: .regularExpression
-        )
-
-        // Write back
-        try updated.write(toFile: scriptPath, atomically: true, encoding: .utf8)
-    }
 
     private func runFTLManPatch(ftl: FTLInstallation, state: InstallationState) async throws {
         let ftlmanPath = InstallationPaths.ftlmanPath(homeDirectory: homeDirectory)
