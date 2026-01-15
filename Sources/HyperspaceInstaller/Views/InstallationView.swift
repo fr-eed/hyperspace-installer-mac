@@ -73,6 +73,7 @@ public struct InstallationView: View {
                         .font(.system(size: 12))
                         .foregroundColor(.red)
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .textSelection(.enabled)
                 }
                 .padding(12)
                 .background(Color.red.opacity(0.1))
