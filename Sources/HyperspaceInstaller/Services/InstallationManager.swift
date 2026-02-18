@@ -434,9 +434,9 @@ class InstallationManager {
             "zips_are_mods": true,
             "ftl_is_zip": true,
             "repack_ftl_data": true,
-            "disable_hs_installer": false,
+            "disable_hs_installer": true,
             "autoupdate": true,
-            "warn_about_missing_hyperspace": true,
+            "warn_about_missing_hyperspace": false,
             "theme": [
                 "colors": "Dark",
                 "opacity": 1.0
