@@ -419,6 +419,10 @@ class InstallationManager {
     }
 
     private func codesignFTLApp(ftl: FTLInstallation) throws {
+        // xattr -cr first to clear any extended attributes that might interfere with codesigning
+        try Self.execShell(
+            "xattr -cr '\(ftl.path)'"
+        )
         try Self.execShell(
             "codesign -f -s - --timestamp=none --all-architectures --deep '\(ftl.path)'"
         )
